@@ -246,50 +246,48 @@ class Market {
     }
 }
 
-class App {
-    static EVENT_BADGE_BASE_CLASS = "event-badge";
-    static EVENT_BADGE_COMPLETED_CLASS = "-complete";
+class Event {
+    static STATUS_BADGE_SELECTOR = ".event-badge";
+    static STATUS_BADGE_COMPLETED_CLASS = "-complete";
     static OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
-    static MUTE_SVG_PATH = chrome.runtime.getURL("images/mute.svg");
-    static PING_AUDIO = new Audio(chrome.runtime.getURL("audio/ping.mp3"));
-
-    static generateId(slug) {
-        return slug.toLowerCase().replace(/ /g, "-");
-    }
 
     constructor() {
-        this.$eventBadge = document.querySelector(`.${App.EVENT_BADGE_BASE_CLASS}`);
-        if (!this.$eventBadge) {
-            console.log("Event badge not found, stopping app setup.");
+        this.markets = [];
+        this.$statusBadge = document.querySelector(Event.STATUS_BADGE_SELECTOR);
+        if (!this.$statusBadge) {
+            console.log("Status badge not found, stopping event setup.");
+            console.log(document);
+            debugger;
             return;
         }
-        if (this.isEventFinished()) {
-            console.log("Event finished, stopping app setup.");
+        if (this.hasEnded()) {
+            console.log("Event finished, stopping event setup.");
             return;
         }
 
-        const $marketContainers = Array.from(document.querySelectorAll(".market-container")).map(
+        // Set up markets
+        const $marketContainers = Array.from(document.querySelectorAll(Market.CONTAINER_SELECTOR)).map(
             ($container) => $container.firstElementChild
         );
         this.markets = Market.fromContainers($marketContainers);
-        console.log("App initialized.");
-        console.log(this.markets);
 
+        // Start observing event badge
         this.startObserving();
     }
 
-    isEventFinished() {
-        return this.$eventBadge.classList.contains(App.EVENT_BADGE_COMPLETED_CLASS);
+    hasEnded() {
+        return this.$statusBadge.classList.contains(Event.STATUS_BADGE_COMPLETED_CLASS);
     }
 
-    handleEventStatusMutation(mutationsList, observer) {
+    handleStatusMutation(mutationsList, observer) {
+        console.log("Status badge mutation!");
+        console.log(mutationsList);
         for (let mutation of mutationsList) {
             if (mutation.type === "attributes" && mutation.attributeName === "class") {
                 const currentClasses = mutation.target.classList;
-                if (currentClasses.contains(App.EVENT_BADGE_COMPLETED_CLASS)) {
+                if (currentClasses.contains(Event.STATUS_BADGE_COMPLETED_CLASS)) {
                     console.log("Event finished, starting cleanup...");
                     this.stopObserving();
-
                     // Clean up market & contract observers
                     this.markets.forEach((market) => {
                         market.stopObserving();
@@ -304,14 +302,31 @@ class App {
     }
 
     startObserving() {
-        this.observer = new MutationObserver(this.handleEventStatusMutation.bind(this));
-        this.observer.observe(this.$eventBadge, App.OBSERVER_CONFIG);
+        this.observer = new MutationObserver(this.handleStatusMutation.bind(this));
+        this.observer.observe(this.$statusBadge, Event.OBSERVER_CONFIG);
     }
 
     stopObserving() {
         if (this.observer) {
             this.observer.disconnect();
             this.observer = null;
+        }
+    }
+}
+
+class App {
+    static MUTE_SVG_PATH = chrome.runtime.getURL("images/mute.svg");
+    static PING_AUDIO = new Audio(chrome.runtime.getURL("audio/ping.mp3"));
+
+    static generateId(slug) {
+        return slug.toLowerCase().replace(/ /g, "-");
+    }
+
+    constructor() {
+        this.event = new Event();
+        if (!this.event.markets || this.event.markets.length == 0) {
+            console.log("No markets found.");
+            return;
         }
     }
 }
