@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Smarkets Monitor",
+  "version": "1.0",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+      "default_icon": {
+        "16": "icons/favicon-16x16.png",
+        "32": "icons/favicon-32x32.png",
+        "128": "icons/favicon.ico"
+      }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://smarkets.com/event/*"
+      ],
+      "js": ["content/content_script.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [ "images/mute.svg", "audio/ping.mp3" ],
+      "matches": [ "https://*/*" ]
+    }
+  ]
+}
