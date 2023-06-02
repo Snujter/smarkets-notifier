@@ -22,6 +22,7 @@ class Contract {
         this.$toggleBtn = this.createToggleButton();
         this.$container = $container;
         this.inserted = false;
+        this.isObserved = false;
     }
 
     get $container() {
@@ -74,19 +75,23 @@ class Contract {
     }
 
     createInput(label) {
+        // Create wrapper
         const $wrapper = document.createElement("div");
         $wrapper.style.margin = "10px";
+
+        // Create label
         const $label = document.createElement("label");
         $label.textContent = label;
+
+        // Create input
         const $input = document.createElement("input");
         $input.type = "number";
         $input.step = "0.01";
         $input.style.opacity = "0.2";
         $input.style.maxWidth = "60px";
         $input.className = label.toLowerCase() + "-input";
-        $input.addEventListener("change", function () {
-            this.style.opacity = parseFloat(this.value) > 0 ? "1" : "0.2";
-        });
+        $input.addEventListener("input", this.handleInput.bind(this));
+
         $wrapper.appendChild($label);
         $wrapper.appendChild($input);
         return {
@@ -94,6 +99,18 @@ class Contract {
             $input,
             $label,
         };
+    }
+
+    handleInput(e) {
+        const value = parseFloat(e.target.value);
+        this.$container.style.backgroundColor = "";
+        if (value > 0) {
+            e.target.style.opacity = "1";
+            this.startObserving();
+        } else {
+            e.target.style.opacity = "0.2";
+            this.stopObserving();
+        }
     }
 
     createToggleButton() {
@@ -141,7 +158,6 @@ class Contract {
         this.$container.appendChild(this.$optionsContainer);
 
         this.inserted = true;
-        this.startObserving();
         console.log(`Inserted into DOM.`);
     }
 
@@ -156,16 +172,20 @@ class Contract {
     }
 
     startObserving() {
-        console.log(`Observer connected for ${this.id}.`);
-        this.observer = new MutationObserver(this.handleSellValueMutation.bind(this));
-        this.observer.observe(this.$sellText, Contract.OBSERVER_CONFIG);
+        if (this.$sellText && this.$sellText instanceof Node && this.inserted && !this.isObserved) {
+            console.log(`Observer connected for ${this.id}.`);
+            this.observer = new MutationObserver(this.handleSellValueMutation.bind(this));
+            this.observer.observe(this.$sellText, Contract.OBSERVER_CONFIG);
+            this.isObserved = true;
+        }
     }
 
     stopObserving() {
-        if (this.observer) {
+        if (this.isObserved) {
             console.log(`Observer disconnected for ${this.id}.`);
             this.observer.disconnect();
             this.observer = null;
+            this.isObserved = false;
         }
     }
 }
