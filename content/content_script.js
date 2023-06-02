@@ -17,8 +17,8 @@ class Contract {
         this.name = null; // gets set up when setting $container
         this.$sellText = null; // gets set up when setting $container
         this._$container = null; // gets set up when setting $container
-        this.minInputElements = this.createInput("Min");
-        this.maxInputElements = this.createInput("Max");
+        this.minInputElements = this.createInput("Below");
+        this.maxInputElements = this.createInput("Above");
         this.$toggleBtn = this.createToggleButton();
         this.$container = $container;
         this.inserted = false;
