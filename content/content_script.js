@@ -1,5 +1,8 @@
 class Contract {
     static OBSERVER_CONFIG = { characterData: true, subtree: true };
+    static CONTAINER_SELECTOR = ".contract-wrapper";
+    static SELL_TEXT_SELECTOR = ".price-series.sell .price.sell";
+    static NAME_SELECTOR = ".name";
 
     static fromContainers($wrappers) {
         const contracts = Array.from($wrappers)
@@ -31,7 +34,7 @@ class Contract {
             return;
         }
 
-        const name = $newContainer.querySelector(".name")?.innerText || "";
+        const name = $newContainer.querySelector(Contract.NAME_SELECTOR)?.innerText || "";
         if (!name) {
             console.log(`Invalid name - skipping contract.`);
             return;
@@ -40,7 +43,7 @@ class Contract {
         // Set up new object properties
         this.id = App.generateId(name);
         this.name = name;
-        this.$sellText = $newContainer.querySelector(".price-series.sell .price.sell");
+        this.$sellText = $newContainer.querySelector(Contract.SELL_TEXT_SELECTOR);
         this._$container = $newContainer;
     }
 
@@ -169,6 +172,8 @@ class Contract {
 
 class Market {
     static OBSERVER_CONFIG = { childList: true };
+    static CONTAINER_SELECTOR = ".market-container";
+    static NAME_SELECTOR = ".market-name";
 
     static fromContainers($wrappers) {
         const markets = Array.from($wrappers)
@@ -181,9 +186,9 @@ class Market {
     constructor($container) {
         this.observer = null;
         this.$container = $container;
-        this.name = $container.querySelector(".market-name").textContent;
+        this.name = $container.querySelector(Market.NAME_SELECTOR).textContent || "";
         this.id = App.generateId(this.name);
-        this.contracts = Contract.fromContainers($container.querySelectorAll(".contract-wrapper"));
+        this.contracts = Contract.fromContainers($container.querySelectorAll(Contract.CONTAINER_SELECTOR));
         this.contracts.forEach((contract) => {
             contract.insertOptionsIntoDOM();
         });
@@ -202,7 +207,7 @@ class Market {
                 console.log("Added / removed nodes:");
                 console.log({ addedNodes, removedNodes });
                 addedNodes.forEach((node) => {
-                    const contracts = Contract.fromContainers(node.querySelectorAll(".contract-wrapper"));
+                    const contracts = Contract.fromContainers(node.querySelectorAll(Contract.CONTAINER_SELECTOR));
                     console.log("New contracts:");
                     console.log(contracts);
 
