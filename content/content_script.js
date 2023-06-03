@@ -270,7 +270,7 @@ class Contract {
 }
 
 class Market {
-    static OBSERVER_CONFIG = { childList: true };
+    static CONTRACT_LIST_OBSERVER_CONFIG = { childList: true };
     static CONTAINER_SELECTOR = ".market-container";
     static NAME_SELECTOR = ".market-name";
 
@@ -283,7 +283,7 @@ class Market {
     }
 
     constructor($container) {
-        this.observer = null;
+        this.contractListObserver = null;
         this.$container = $container;
         this.name = $container.querySelector(Market.NAME_SELECTOR).textContent || "";
         this.id = App.generateId(this.name);
@@ -292,7 +292,7 @@ class Market {
             contract.insertOptionsIntoDOM();
         });
 
-        this.startObserving();
+        this.startObservingContractList();
     }
 
     handleContractListMutation(mutationsList, observer) {
@@ -332,15 +332,15 @@ class Market {
         }
     }
 
-    startObserving() {
-        this.observer = new MutationObserver(this.handleContractListMutation.bind(this));
-        this.observer.observe(this.$container, Market.OBSERVER_CONFIG);
+    startObservingContractList() {
+        this.contractListObserver = new MutationcontractListObserver(this.handleContractListMutation.bind(this));
+        this.contractListObserver.observe(this.$container, Market.CONTRACT_LIST_OBSERVER_CONFIG);
     }
 
-    stopObserving() {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
+    stopObservingContractList() {
+        if (this.contractListObserve) {
+            this.contractListObserve.disconnect();
+            this.contractListObserve = null;
         }
     }
 }
@@ -371,7 +371,7 @@ class Event {
         this.markets = Market.fromContainers($marketContainers);
 
         // Start observing event badge
-        this.startObserving();
+        this.startObservingStatus();
     }
 
     hasEnded() {
@@ -386,10 +386,10 @@ class Event {
                 const currentClasses = mutation.target.classList;
                 if (currentClasses.contains(Event.STATUS_BADGE_COMPLETED_CLASS)) {
                     console.log("Event finished, starting cleanup...");
-                    this.stopObserving();
+                    this.stopObservingStatus();
                     // Clean up market & contract observers
                     this.markets.forEach((market) => {
-                        market.stopObserving();
+                        market.stopObservingContractList();
                         market.contracts.forEach((contract) => {
                             contract.removeOptionsFromDOM();
                         });
@@ -399,15 +399,15 @@ class Event {
         }
     }
 
-    startObserving() {
-        this.observer = new MutationObserver(this.handleStatusMutation.bind(this));
-        this.observer.observe(this.$statusBadge, Event.OBSERVER_CONFIG);
+    startObservingStatus() {
+        this.statusObserver = new MutationObserver(this.handleStatusMutation.bind(this));
+        this.statusObserver.observe(this.$statusBadge, Event.OBSERVER_CONFIG);
     }
 
-    stopObserving() {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
+    stopObservingStatus() {
+        if (this.statusObserver) {
+            this.statusObserver.disconnect();
+            this.statusObserver = null;
         }
     }
 }
