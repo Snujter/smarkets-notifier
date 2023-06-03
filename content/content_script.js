@@ -1,7 +1,8 @@
 class Contract {
-    static OBSERVER_CONFIG = { characterData: true, subtree: true };
+    static SELL_VALUE_OBSERVER_CONFIG = { childList: true, characterData: true, subtree: true };
     static CONTAINER_SELECTOR = ".contract-wrapper";
-    static SELL_TEXT_SELECTOR = ".price-series.sell .price.sell";
+    static SELL_TEXT_SELECTOR = ".price.sell";
+    static SELL_TEXT_CONTAINER_SELECTOR = ".price-series.sell .price-item:first-child";
     static NAME_SELECTOR = ".name";
 
     static fromContainers($wrappers) {
@@ -15,14 +16,22 @@ class Contract {
     constructor($container) {
         this.id = null; // gets set up when setting $container
         this.name = null; // gets set up when setting $container
-        this.$sellText = null; // gets set up when setting $container
+        this._$sellTextContainer = null; // gets set up when setting $container
         this._$container = null; // gets set up when setting $container
+        this.prevSellValue = 0;
         this.minInputElements = this.createInput("Below");
         this.maxInputElements = this.createInput("Above");
         this.$toggleBtn = this.createToggleButton();
         this.$container = $container;
         this.inserted = false;
-        this.isObserved = false;
+        this.isSellValueObserved = false;
+    }
+
+    get sellValueObserver() {
+        if (!this._sellValueObserver) {
+            this._sellValueObserver = new MutationObserver(this.handleSellValueMutation.bind(this));
+        }
+        return this._sellValueObserver;
     }
 
     get $container() {
@@ -32,6 +41,10 @@ class Contract {
     set $container($newContainer) {
         // Validation
         if ($newContainer === this.$container) {
+            return;
+        }
+        if (!$newContainer) {
+            console.log("No new container.");
             return;
         }
 
@@ -44,33 +57,59 @@ class Contract {
         // Set up new object properties
         this.id = App.generateId(name);
         this.name = name;
-        this.$sellText = $newContainer.querySelector(Contract.SELL_TEXT_SELECTOR);
+        this.$sellTextContainer = $newContainer.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
         this._$container = $newContainer;
+    }
+
+    get $sellTextContainer() {
+        return this._$sellTextContainer;
+    }
+
+    set $sellTextContainer($newContainer) {
+        this._$sellTextContainer = $newContainer;
+
+        // Refresh sell value observer
+        this.stopObservingSellValue();
+        this.startObservingSellValue();
+    }
+
+    get $sellText() {
+        return this.$sellTextContainer.querySelector(Contract.SELL_TEXT_SELECTOR);
+    }
+    get sellValue() {
+        return this.$sellText.textContent ? parseFloat(this.$sellText.textContent) : 0;
     }
 
     handleSellValueMutation(mutationsList, observer) {
         console.log(mutationsList);
-        for (let mutation of mutationsList) {
-            if (mutation.type === "characterData") {
-                const sellValue = parseFloat(this.$sellText.textContent.trim());
-                const lowerThreshold = parseFloat(this.minInputElements.$input.value);
-                const upperThreshold = parseFloat(this.maxInputElements.$input.value);
-                console.log({
-                    id: this.id,
-                    sellValue,
-                    upperThreshold,
-                    lowerThreshold,
-                });
+        // Sometimes when the sell price changes to "ASK", the sell value <span> gets replaced by a <div>
+        if (!this.$sellText) {
+            console.log("Sell text element is not found.");
+            return;
+        }
 
-                if (!isNaN(sellValue) && (sellValue >= upperThreshold || sellValue <= lowerThreshold)) {
-                    this.$container.style.backgroundColor = "#6e0404";
-                    if (!this.isMuted()) {
-                        App.PING_AUDIO.play();
-                    }
-                } else {
-                    this.$container.style.backgroundColor = "";
-                }
+        if (this.prevSellValue === this.sellValue) {
+            console.log("Sell text element has no change.");
+            return;
+        }
+
+        this.prevSellValue = this.sellValue;
+        const lowerThreshold = parseFloat(this.minInputElements.$input.value);
+        const upperThreshold = parseFloat(this.maxInputElements.$input.value);
+        console.log({
+            id: this.id,
+            sellValue: this.sellValue,
+            upperThreshold,
+            lowerThreshold,
+        });
+
+        if (this.sellValue >= upperThreshold || this.sellValue <= lowerThreshold) {
+            this.$container.style.backgroundColor = "#6e0404";
+            if (!this.isMuted()) {
+                App.PING_AUDIO.play();
             }
+        } else {
+            this.$container.style.backgroundColor = "";
         }
     }
 
@@ -106,10 +145,10 @@ class Contract {
         this.$container.style.backgroundColor = "";
         if (value > 0) {
             e.target.style.opacity = "1";
-            this.startObserving();
+            this.startObservingSellValue();
         } else {
             e.target.style.opacity = "0.2";
-            this.stopObserving();
+            this.stopObservingSellValue();
         }
     }
 
@@ -164,28 +203,38 @@ class Contract {
     removeOptionsFromDOM() {
         this.$optionsContainer.remove();
         this.inserted = false;
-        this.stopObserving();
+        this.stopObservingSellValue();
     }
 
     isMuted() {
         return this.inserted && this.$toggleBtn.getAttribute("data-active") === "true";
     }
 
-    startObserving() {
-        if (this.$sellText && this.$sellText instanceof Node && this.inserted && !this.isObserved) {
-            console.log(`Observer connected for ${this.id}.`);
-            this.observer = new MutationObserver(this.handleSellValueMutation.bind(this));
-            this.observer.observe(this.$sellText, Contract.OBSERVER_CONFIG);
-            this.isObserved = true;
+    startObservingSellValue() {
+        // If it's already observed or not inserted in the DOM then pointless to check
+        if (this.isSellValueObserved || !this.inserted) {
+            return;
+        }
+
+        // Check if text container to be observed exists
+        const hasValidSellTextContainer = this.$sellTextContainer && this.$sellTextContainer instanceof Node;
+
+        // Check if any of the inputs have valid values
+        const hasValidInputValues =
+            parseFloat(this.minInputElements.$input.value) > 0 || parseFloat(this.maxInputElements.$input.value) > 0;
+
+        if (hasValidSellTextContainer && hasValidInputValues) {
+            this.sellValueObserver.observe(this.$sellTextContainer, Contract.SELL_VALUE_OBSERVER_CONFIG);
+            this.isSellValueObserved = true;
+            console.log(`Sell value observer connected for ${this.id}.`);
         }
     }
 
-    stopObserving() {
-        if (this.isObserved) {
-            console.log(`Observer disconnected for ${this.id}.`);
-            this.observer.disconnect();
-            this.observer = null;
-            this.isObserved = false;
+    stopObservingSellValue() {
+        if (this.isSellValueObserved) {
+            this.sellValueObserver.disconnect();
+            this.isSellValueObserved = false;
+            console.log(`Sell value observer disconnected for ${this.id}.`);
         }
     }
 }
@@ -312,7 +361,6 @@ class Event {
                     this.markets.forEach((market) => {
                         market.stopObserving();
                         market.contracts.forEach((contract) => {
-                            contract.stopObserving();
                             contract.removeOptionsFromDOM();
                         });
                     });
