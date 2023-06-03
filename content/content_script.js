@@ -1,5 +1,6 @@
 class Contract {
     static SELL_VALUE_OBSERVER_CONFIG = { childList: true, characterData: true, subtree: true };
+    static STATUS_OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
     static CONTAINER_SELECTOR = ".contract-wrapper";
     static SELL_TEXT_SELECTOR = ".price.sell";
     static SELL_TEXT_CONTAINER_SELECTOR = ".price-series.sell .price-item:first-child";
@@ -32,6 +33,13 @@ class Contract {
             this._sellValueObserver = new MutationObserver(this.handleSellValueMutation.bind(this));
         }
         return this._sellValueObserver;
+    }
+
+    get statusObserver() {
+        if (!this._statusObserver) {
+            this._statusObserver = new MutationObserver(this.handleStatusMutation.bind(this));
+        }
+        return this._statusObserver;
     }
 
     get $container() {
@@ -110,6 +118,20 @@ class Contract {
             }
         } else {
             this.$container.style.backgroundColor = "";
+        }
+    }
+
+    handleStatusMutation(mutationsList, observer) {
+        console.log(mutationsList);
+        for (let mutation of mutationsList) {
+            if (mutation.target.classList.contains("halted")) {
+                console.log("Contract halted, stopping sell value observation.");
+                this.stopObservingSellValue();
+            } else {
+                console.log("Contract resuming, starting sell value observation.");
+                this.$sellTextContainer = this.$container.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
+                this.startObservingSellValue();
+            }
         }
     }
 
@@ -198,12 +220,15 @@ class Contract {
 
         this.inserted = true;
         console.log(`Inserted into DOM.`);
+
+        this.startObservingStatus();
     }
 
     removeOptionsFromDOM() {
         this.$optionsContainer.remove();
         this.inserted = false;
         this.stopObservingSellValue();
+        this.stopObservingStatus();
     }
 
     isMuted() {
@@ -235,6 +260,22 @@ class Contract {
             this.sellValueObserver.disconnect();
             this.isSellValueObserved = false;
             console.log(`Sell value observer disconnected for ${this.id}.`);
+        }
+    }
+
+    startObservingStatus() {
+        if (this.inserted && !this.isStatusObserved && this.$container?.firstChild instanceof Node) {
+            this.statusObserver.observe(this.$container.firstChild, Contract.STATUS_OBSERVER_CONFIG);
+            this.isStatusObserved = true;
+            console.log(`Status observer connected for ${this.id}.`);
+        }
+    }
+
+    stopObservingStatus() {
+        if (this.isStatusObserved) {
+            this.statusObserver.disconnect();
+            this.isStatusObserved = false;
+            console.log(`Status observer disconnected for ${this.id}.`);
         }
     }
 }
