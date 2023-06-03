@@ -17,7 +17,6 @@ class Contract {
     constructor($container) {
         this.id = null; // gets set up when setting $container
         this.name = null; // gets set up when setting $container
-        this._$sellTextContainer = null; // gets set up when setting $container
         this._$container = null; // gets set up when setting $container
         this.prevSellValue = 0;
         this.minInputElements = this.createInput("Below");
@@ -65,20 +64,11 @@ class Contract {
         // Set up new object properties
         this.id = App.generateId(name);
         this.name = name;
-        this.$sellTextContainer = $newContainer.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
         this._$container = $newContainer;
     }
 
     get $sellTextContainer() {
-        return this._$sellTextContainer;
-    }
-
-    set $sellTextContainer($newContainer) {
-        this._$sellTextContainer = $newContainer;
-
-        // Refresh sell value observer
-        this.stopObservingSellValue();
-        this.startObservingSellValue();
+        return this.$container.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
     }
 
     get $sellText() {
@@ -129,7 +119,6 @@ class Contract {
                 this.stopObservingSellValue();
             } else {
                 console.log("Contract resuming, starting sell value observation.");
-                this.$sellTextContainer = this.$container.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
                 this.startObservingSellValue();
             }
         }
