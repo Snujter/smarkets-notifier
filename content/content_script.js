@@ -6,6 +6,9 @@ class Contract {
     static SELL_TEXT_CONTAINER_SELECTOR = ".price-series.sell .price-item:first-child";
     static NAME_SELECTOR = ".name";
 
+    static CIRCLE_DEFAULT_COLOR = "#00CA84";
+    static CIRCLE_WARNING_COLOR = "#FF8000";
+
     static fromContainers($wrappers) {
         const contracts = Array.from($wrappers)
             .map(($contractContainer) => new Contract($contractContainer))
@@ -19,12 +22,15 @@ class Contract {
         this.name = null; // gets set up when setting $container
         this._$container = null; // gets set up when setting $container
         this.prevSellValue = 0;
+        this.$observeStatusCircle = this.createObserveStatusCircle();
+        this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
         this.minInputElements = this.createInput("Below");
         this.maxInputElements = this.createInput("Above");
         this.$toggleBtn = this.createToggleButton();
         this.$container = $container;
         this.inserted = false;
         this.isSellValueObserved = false;
+        this.isStatusObserved = false;
     }
 
     get sellValueObserver() {
@@ -77,6 +83,13 @@ class Contract {
     get sellValue() {
         return this.$sellText.textContent ? parseFloat(this.$sellText.textContent) : 0;
     }
+    get isSellValueObserved() {
+        return this._isSellValueObserved;
+    }
+    set isSellValueObserved(newValue) {
+        this._isSellValueObserved = newValue;
+        this.$observeStatusCircle.style.opacity = newValue ? "1" : "0.4";
+    }
 
     handleSellValueMutation(mutationsList, observer) {
         console.log(mutationsList);
@@ -102,12 +115,12 @@ class Contract {
         });
 
         if (this.sellValue >= upperThreshold || this.sellValue <= lowerThreshold) {
-            this.$container.style.backgroundColor = "#6e0404";
+            this.setObserveStatusCircleColor(Contract.CIRCLE_WARNING_COLOR);
             if (!this.isMuted()) {
                 App.PING_AUDIO.play();
             }
         } else {
-            this.$container.style.backgroundColor = "";
+            this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
         }
     }
 
@@ -122,6 +135,22 @@ class Contract {
                 this.startObservingSellValue();
             }
         }
+    }
+
+    createObserveStatusCircle() {
+        const circle = document.createElement("div");
+        circle.style.width = `15px`;
+        circle.style.height = `15px`;
+        circle.style.borderRadius = "50%";
+        circle.style.margin = "0 20px 0 10px";
+
+        return circle;
+    }
+
+    setObserveStatusCircleColor(color) {
+        this.$observeStatusCircle.style.backgroundColor = color;
+        this.$observeStatusCircle.style.mozBoxShadow = `0px 0px 10px 1px ${color}`;
+        this.$observeStatusCircle.style.boxShadow = `0px 0px 10px 1px ${color}`;
     }
 
     createInput(label) {
@@ -153,7 +182,7 @@ class Contract {
 
     handleInput(e) {
         const value = parseFloat(e.target.value);
-        this.$container.style.backgroundColor = "";
+        this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
         if (value > 0) {
             e.target.style.opacity = "1";
             this.startObservingSellValue();
@@ -201,6 +230,7 @@ class Contract {
         this.$optionsContainer.style.display = "flex";
         this.$optionsContainer.style.alignItems = "center";
 
+        this.$optionsContainer.appendChild(this.$observeStatusCircle);
         this.$optionsContainer.appendChild(this.minInputElements.$wrapper);
         this.$optionsContainer.appendChild(this.maxInputElements.$wrapper);
         this.$optionsContainer.appendChild(this.$toggleBtn);
