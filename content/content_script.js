@@ -211,6 +211,7 @@ class Contract {
         console.log(`Inserted into DOM.`);
 
         this.startObservingStatus();
+        this.startObservingSellValue();
     }
 
     removeOptionsFromDOM() {
