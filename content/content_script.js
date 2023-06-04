@@ -333,7 +333,7 @@ class Market {
     }
 
     startObservingContractList() {
-        this.contractListObserver = new MutationcontractListObserver(this.handleContractListMutation.bind(this));
+        this.contractListObserver = new MutationObserver(this.handleContractListMutation.bind(this));
         this.contractListObserver.observe(this.$container, Market.CONTRACT_LIST_OBSERVER_CONFIG);
     }
 
@@ -348,7 +348,7 @@ class Market {
 class Event {
     static STATUS_BADGE_SELECTOR = ".event-badge";
     static STATUS_BADGE_COMPLETED_CLASS = "-complete";
-    static OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
+    static STATUS_OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
 
     constructor() {
         this.markets = [];
@@ -401,7 +401,7 @@ class Event {
 
     startObservingStatus() {
         this.statusObserver = new MutationObserver(this.handleStatusMutation.bind(this));
-        this.statusObserver.observe(this.$statusBadge, Event.OBSERVER_CONFIG);
+        this.statusObserver.observe(this.$statusBadge, Event.STATUS_OBSERVER_CONFIG);
     }
 
     stopObservingStatus() {
