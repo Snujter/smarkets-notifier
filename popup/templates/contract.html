@@ -1,0 +1,67 @@
+<template id="contract-template" name="contract">
+    <style>
+        .container {
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .container.warning {
+            border: 1px solid var(--color-orange);
+            color: var(--color-orange);
+            background-color: var(--color-gray);
+        }
+
+        .container.inactive {
+            color: var(--color-gray);
+        }
+
+        .status-container {
+            margin-right: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .status::before {
+            content: "";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status.active::before {
+            background-color: var(--color-green);
+            -moz-box-shadow: 0px 0px 10px 1px var(--color-green);
+            box-shadow: 0px 0px 10px 1px var(--color-green);
+        }
+
+        .status.inactive::before {
+            background-color: var(--color-gray);
+            -moz-box-shadow: 0px 0px 10px 1px var(--color-gray);
+            box-shadow: 0px 0px 10px 1px var(--color-gray);
+        }
+
+        .status.warning::before {
+            background-color: var(--color-orange);
+            -moz-box-shadow: 0px 0px 10px 1px var(--color-orange);
+            box-shadow: 0px 0px 10px 1px var(--color-orange);
+        }
+
+        .ml-auto {
+            margin-left: auto;
+        }
+    </style>
+    <div class="container">
+        <div class="status-container">
+            <slot name="status" class="status"></slot>
+        </div>
+        <slot name="name"></slot>
+        <div class="ml-auto">
+            <slot name="value"></slot>
+        </div>
+    </div>
+</template>
