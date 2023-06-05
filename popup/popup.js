@@ -37,7 +37,7 @@ class EventElement extends HTMLElement {
         const marketsSlot = this.shadowRoot.querySelector('slot[name="markets"]');
         const marketElement = document.createElement("market-element");
         marketElement.setAttribute("name", name);
-        marketsSlot.parentNode.insertBefore(marketElement, marketsSlot.nextSibling);
+        marketsSlot.append(marketElement);
         return marketElement;
     }
 }
