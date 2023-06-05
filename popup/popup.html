@@ -1,13 +1,33 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <link rel="stylesheet" href="popup_dist.css">
+    <link rel="stylesheet" href="dist/popup.css" />
     <title>Smarkets Monitor</title>
+    <style>
+        :root {
+            --color-green: #00CA84;
+            --color-orange: #FF8000;
+            --color-white: #FFFFFF;
+            --color-black: #161616;
+            --color-gray: #3E3E3E;
+            --color-gray-dark: #1E1E1E;
+            --color-gray-light: #969696;
+        }
+
+        #app {
+            padding: 1.25rem;
+            background-color: var(--color-black);
+            color: var(--color-white);
+            width: 24rem;
+        }
+    </style>
 </head>
-<body>
-    <div id="log"></div>
-    <button id="clear">Clear</button>
+
+<body id="app">
+    <div id="events-container"></div>
 
     <script src="popup.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,53 @@
+<template id="event-template">
+    <style>
+        .event {
+            padding: 1rem;
+            background-color: var(--color-gray-dark);
+            color: var(--color-white);
+        }
+
+        .event-header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--color-gray-light);
+        }
+
+        .event-team {
+            flex: 1;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .event-divider {
+            flex-shrink: 0;
+            padding: 0.5rem;
+            font-weight: bold;
+            color: var(--color-gray-light)
+        }
+
+        .event-markets {
+            margin-top: 1rem;
+        }
+    </style>
+
+    <div class="event">
+        <!-- Event Header -->
+        <div class="event-header">
+            <h2 class="event-team">
+                <slot name="home-team">-</slot>
+            </h2>
+            <h2 class="event-divider">vs</h2>
+            <h2 class="event-team">
+                <slot name="away-team">-</slot>
+            </h2>
+        </div>
+
+        <!-- Markets -->
+        <div class="event-markets">
+            <slot name="markets">No markets.</slot>
+        </div>
+    </div>
+</template>
