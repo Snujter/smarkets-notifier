@@ -3,8 +3,6 @@
   "name": "Smarkets Monitor",
   "version": "1.0",
   "permissions": [
-    "storage",
-    "activeTab"
   ],
   "action": {
     "default_popup": "popup/popup.html",
