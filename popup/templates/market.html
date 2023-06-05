@@ -1,0 +1,15 @@
+<template id="market-template" name="market" class="mt-5">
+  <style>
+    .mt-5 {
+      margin-top: 1.25rem;
+    }
+
+    .font-bold {
+      font-weight: bold;
+    }
+  </style>
+  <h3 class="font-bold">
+    <slot name="name"></slot>
+  </h3>
+  <slot name="contracts"></slot>
+</template>

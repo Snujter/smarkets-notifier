@@ -32,13 +32,50 @@ class EventElement extends HTMLElement {
         const slotElement = this.shadowRoot.querySelector(`slot[name="${name}"]`);
         slotElement.textContent = value;
     }
+
+    addMarket(name) {
+        const marketsSlot = this.shadowRoot.querySelector('slot[name="markets"]');
+        const marketElement = document.createElement("market-element");
+        marketElement.setAttribute("name", name);
+        marketsSlot.parentNode.insertBefore(marketElement, marketsSlot.nextSibling);
+        return marketElement;
+    }
+}
+
+class MarketElement extends HTMLElement {
+    static TEMPLATE_ID = "market-template";
+
+    static get observedAttributes() {
+        return ["name"];
+    }
+
+    constructor() {
+        super();
+        const template = document.getElementById(MarketElement.TEMPLATE_ID);
+        const templateContent = template.content.cloneNode(true);
+
+        const shadowRoot = this.attachShadow({ mode: "open" });
+        shadowRoot.appendChild(templateContent.cloneNode(true));
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue !== newValue) {
+            this.updateSlotContent(name, newValue);
+        }
+    }
+
+    updateSlotContent(name, value) {
+        const slotElement = this.shadowRoot.querySelector(`slot[name="${name}"]`);
+        slotElement.textContent = value;
+    }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
     // Load templates to DOM
-    loadTemplates(["event"]).then(function () {
+    loadTemplates(["event", "market"]).then(function () {
         // Create custom elements from templates
         customElements.define("event-element", EventElement);
+        customElements.define("market-element", MarketElement);
     });
 });
 
