@@ -9,18 +9,20 @@ class Contract {
     static CIRCLE_DEFAULT_COLOR = "#00CA84";
     static CIRCLE_WARNING_COLOR = "#FF8000";
 
-    static fromContainers($wrappers) {
+    static fromContainers($wrappers, market) {
         const contracts = Array.from($wrappers)
-            .map(($contractContainer) => new Contract($contractContainer))
+            .map(($contractContainer) => new Contract($contractContainer, market))
             .filter(Boolean); // Remove null values
 
         return contracts;
     }
 
-    constructor($container) {
+    constructor($container, market) {
         this.id = null; // gets set up when setting $container
         this.name = null; // gets set up when setting $container
         this._$container = null; // gets set up when setting $container
+        this.market = market;
+        this.event = market.event;
         this.prevSellValue = 0;
         this.$observeStatusCircle = this.createObserveStatusCircle();
         this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
@@ -305,20 +307,21 @@ class Market {
     static CONTAINER_SELECTOR = ".market-container";
     static NAME_SELECTOR = ".market-name";
 
-    static fromContainers($wrappers) {
+    static fromContainers($wrappers, event) {
         const markets = Array.from($wrappers)
-            .map(($container) => new Market($container))
+            .map(($container) => new Market($container, event))
             .filter(Boolean); // Remove null values
 
         return markets;
     }
 
-    constructor($container) {
+    constructor($container, event) {
         this.contractListObserver = null;
         this.$container = $container;
+        this.event = event;
         this.name = $container.querySelector(Market.NAME_SELECTOR).textContent || "";
         this.id = App.generateId(this.name);
-        this.contracts = Contract.fromContainers($container.querySelectorAll(Contract.CONTAINER_SELECTOR));
+        this.contracts = Contract.fromContainers($container.querySelectorAll(Contract.CONTAINER_SELECTOR), this);
         this.contracts.forEach((contract) => {
             contract.insertOptionsIntoDOM();
         });
@@ -399,7 +402,7 @@ class Event {
         const $marketContainers = Array.from(document.querySelectorAll(Market.CONTAINER_SELECTOR)).map(
             ($container) => $container.firstElementChild
         );
-        this.markets = Market.fromContainers($marketContainers);
+        this.markets = Market.fromContainers($marketContainers, this);
 
         // Start observing event badge
         this.startObservingStatus();
