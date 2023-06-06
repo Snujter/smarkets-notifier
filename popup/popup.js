@@ -1,11 +1,3 @@
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.type === "logChange") {
-        const logElement = document.createElement("div");
-        logElement.textContent = `${request.marketName} - ${request.contractName} - ${request.sell}`;
-        document.getElementById("log").appendChild(logElement);
-    }
-});
-
 class EventElement extends HTMLElement {
     static TEMPLATE_ID = "event-template";
 
@@ -118,32 +110,49 @@ class ContractElement extends HTMLElement {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    // Load templates to DOM
-    loadTemplates(["event", "market", "contract"]).then(function () {
-        // Create custom elements from templates
-        customElements.define("event-element", EventElement);
-        customElements.define("market-element", MarketElement);
-        customElements.define("contract-element", ContractElement);
-    });
-});
+class App {
+    constructor() {
+        this.$eventsContainer = null;
+        this.backgroundPort = null;
 
-function loadTemplates(templatePaths) {
-    const fetchPromises = templatePaths.map(function (templatePath) {
-        return fetch(`templates/${templatePath}.html`).then(function (response) {
-            return response.text();
-        });
-    });
+        document.addEventListener("DOMContentLoaded", () => {
+            this.loadTemplates(["event", "market", "contract"]).then(() => {
+                customElements.define("event-element", EventElement);
+                customElements.define("market-element", MarketElement);
+                customElements.define("contract-element", ContractElement);
 
-    return Promise.all(fetchPromises)
-        .then(function (templateContents) {
-            templateContents.forEach(function (templateContent) {
-                const templateDiv = document.createElement("div");
-                templateDiv.innerHTML = templateContent;
-                document.body.appendChild(templateDiv);
+                this.$eventsContainer = document.getElementById("events-container");
+
+                this.backgroundPort = chrome.runtime.connect({ name: "popup-script" });
+
+                this.backgroundPort.onMessage.addListener((message) => {
+                    console.log("Message received in the popup script:", message);
+                });
+
+                this.backgroundPort.postMessage({ text: "Hello from the popup script!" });
             });
-        })
-        .catch(function (error) {
-            console.error("Failed to load templates:", error);
         });
+    }
+
+    loadTemplates(templatePaths) {
+        const fetchPromises = templatePaths.map((templatePath) => {
+            return fetch(`templates/${templatePath}.html`).then((response) => {
+                return response.text();
+            });
+        });
+
+        return Promise.all(fetchPromises)
+            .then((templateContents) => {
+                templateContents.forEach((templateContent) => {
+                    const templateDiv = document.createElement("div");
+                    templateDiv.innerHTML = templateContent;
+                    document.body.appendChild(templateDiv);
+                });
+            })
+            .catch((error) => {
+                console.error("Failed to load templates:", error);
+            });
+    }
 }
+
+const app = new App();
