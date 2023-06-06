@@ -386,6 +386,7 @@ class Event {
     static STATUS_OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
 
     constructor() {
+        this.id = null;
         this.homeTeam = null;
         this.awayTeam = null;
         this.markets = [];
@@ -415,6 +416,9 @@ class Event {
             debugger;
             return;
         }
+
+        // Set up id
+        this.id = App.generateId(`${this.homeTeam}-${this.awayTeam}`);
 
         // Set up markets
         const $marketContainers = Array.from(document.querySelectorAll(Market.CONTAINER_SELECTOR)).map(
