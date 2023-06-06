@@ -386,6 +386,7 @@ class Event {
 
     constructor() {
         this.markets = [];
+        // Set up status badge
         this.$statusBadge = document.querySelector(Event.STATUS_BADGE_SELECTOR);
         if (!this.$statusBadge) {
             console.log("Status badge not found, stopping event setup.");
@@ -404,7 +405,7 @@ class Event {
         );
         this.markets = Market.fromContainers($marketContainers, this);
 
-        // Start observing event badge
+        // Start observing status badge
         this.startObservingStatus();
     }
 
