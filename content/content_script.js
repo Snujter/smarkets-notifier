@@ -382,10 +382,14 @@ class Market {
 class Event {
     static STATUS_BADGE_SELECTOR = ".event-badge";
     static STATUS_BADGE_COMPLETED_CLASS = "-complete";
+    static PLAYERS_SELECTOR = ".name.competitor";
     static STATUS_OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
 
     constructor() {
+        this.homeTeam = null;
+        this.awayTeam = null;
         this.markets = [];
+
         // Set up status badge
         this.$statusBadge = document.querySelector(Event.STATUS_BADGE_SELECTOR);
         if (!this.$statusBadge) {
@@ -396,6 +400,19 @@ class Event {
         }
         if (this.hasEnded()) {
             console.log("Event finished, stopping event setup.");
+            return;
+        }
+
+        // Set up players
+        const players = Array.from(document.querySelectorAll(Event.PLAYERS_SELECTOR)).map(($player) =>
+            $player.textContent.trim()
+        );
+        this.homeTeam = players[0] || "";
+        this.awayTeam = players[1] || "";
+        if (!this.homeTeam || !this.awayTeam) {
+            console.log("Teams not found, stopping event setup.");
+            console.log(document);
+            debugger;
             return;
         }
 
