@@ -34,11 +34,11 @@ class EventElement extends HTMLElement {
     }
 
     addMarket(name) {
-        const marketsSlot = this.shadowRoot.querySelector('slot[name="markets"]');
-        const marketElement = document.createElement("market-element");
-        marketElement.setAttribute("name", name);
-        marketsSlot.append(marketElement);
-        return marketElement;
+        const $marketsSlot = this.shadowRoot.querySelector('slot[name="markets"]');
+        const $market = document.createElement("market-element");
+        $market.setAttribute("name", name);
+        $marketsSlot.append($market);
+        return $market;
     }
 }
 
@@ -65,18 +65,18 @@ class MarketElement extends HTMLElement {
     }
 
     updateSlotContent(name, value) {
-        const slotElement = this.shadowRoot.querySelector(`slot[name="${name}"]`);
-        slotElement.textContent = value;
+        const $slot = this.shadowRoot.querySelector(`slot[name="${name}"]`);
+        $slot.textContent = value;
     }
 
     addContract(name, value, status = "inactive") {
-        const contractsSlot = this.shadowRoot.querySelector('slot[name="contracts"]');
-        const contractElement = document.createElement("contract-element");
-        contractElement.setAttribute("name", name);
-        contractElement.setAttribute("value", value);
-        contractElement.setAttribute("status", status);
-        contractsSlot.append(contractElement);
-        return contractElement;
+        const $contractsSlot = this.shadowRoot.querySelector('slot[name="contracts"]');
+        const $contract = document.createElement("contract-element");
+        $contract.setAttribute("name", name);
+        $contract.setAttribute("value", value);
+        $contract.setAttribute("status", status);
+        $contractsSlot.append($contract);
+        return $contract;
     }
 }
 
@@ -103,17 +103,17 @@ class ContractElement extends HTMLElement {
     }
 
     updateSlotContent(name, value) {
-        const slotElement = this.shadowRoot.querySelector(`slot[name="${name}"]`);
+        const $slot = this.shadowRoot.querySelector(`slot[name="${name}"]`);
 
         if (name == "status") {
             const $container = this.shadowRoot.querySelector(`.container`);
-            slotElement.classList.toggle("active", value === "active");
-            slotElement.classList.toggle("inactive", value === "inactive");
+            $slot.classList.toggle("active", value === "active");
+            $slot.classList.toggle("inactive", value === "inactive");
+            $slot.classList.toggle("warning", value === "warning");
             $container.classList.toggle("inactive", value === "inactive");
-            slotElement.classList.toggle("warning", value === "warning");
             $container.classList.toggle("warning", value === "warning");
         } else {
-            slotElement.textContent = value;
+            $slot.textContent = value;
         }
     }
 }
