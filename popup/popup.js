@@ -61,13 +61,14 @@ class MarketElement extends HTMLElement {
         $slot.textContent = value;
     }
 
-    addContract(id, name, value, status = "inactive") {
+    addContract(options) {
+        const { id, name, value, status } = options;
         const $contractsSlot = this.shadowRoot.querySelector('slot[name="contracts"]');
         const $contract = document.createElement("contract-element");
         $contract.setAttribute("id", id);
         $contract.setAttribute("name", name);
-        $contract.setAttribute("value", value);
-        $contract.setAttribute("status", status);
+        $contract.setAttribute("value", value || 0);
+        $contract.setAttribute("status", status || "inactive");
         $contractsSlot.append($contract);
         return $contract;
     }
@@ -200,8 +201,7 @@ class App {
 
                     // Add contract elements for the market element
                     marketContracts.forEach((contract) => {
-                        const { id, name, value, status } = contract;
-                        $market.addContract(id, name, value, status);
+                        $market.addContract(contract);
                     });
                 });
 
