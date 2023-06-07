@@ -293,7 +293,7 @@ class Contract {
 
             // Send message to service worker with new contract
             App.PORT.postMessage({
-                type: "add-contract",
+                type: "set-contract",
                 id: this.id,
                 name: this.name,
                 marketId: this.market.id,
@@ -388,7 +388,7 @@ class Market {
 
         // Send message to service worker with new event
         App.PORT.postMessage({
-            type: "add-market",
+            type: "set-market",
             id: this.id,
             eventId: this.event.id,
             name: this.name,
@@ -491,7 +491,7 @@ class Event {
 
         // Send message to service worker with new event
         App.PORT.postMessage({
-            type: "add-event",
+            type: "set-event",
             id: this.id,
             homeTeam: this.homeTeam,
             awayTeam: this.awayTeam,

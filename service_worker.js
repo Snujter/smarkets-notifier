@@ -47,20 +47,20 @@
             }
 
             switch (message.type) {
-                case "add-event":
-                    addEvent(message, tabId);
+                case "set-event":
+                    setEvent(message, tabId);
                     break;
                 case "remove-event":
                     removeEvent(message);
                     break;
-                case "add-market":
-                    addMarket(message);
+                case "set-market":
+                    setMarket(message);
                     break;
                 case "remove-market":
                     removeMarket(message);
                     break;
-                case "add-contract":
-                    addContract(message);
+                case "set-contract":
+                    setContract(message);
                     break;
                 case "remove-contract":
                     removeContract(message);
@@ -82,7 +82,7 @@
         };
         const { type } = message;
         switch (type) {
-            case "add-event":
+            case "set-event":
                 if (!message.id) {
                     validation.messages.push("No id found.");
                 }
@@ -98,7 +98,7 @@
                     validation.messages.push("No id found.");
                 }
                 break;
-            case "add-market":
+            case "set-market":
                 if (!message.id) {
                     validation.messages.push("No id found.");
                 }
@@ -117,7 +117,7 @@
                     validation.messages.push("No event id found.");
                 }
                 break;
-            case "add-contract":
+            case "set-contract":
                 if (!message.id) {
                     validation.messages.push("No id found.");
                 }
@@ -154,7 +154,7 @@
     }
 
     // Add an event to local storage
-    function addEvent(message, tabId) {
+    function setEvent(message, tabId) {
         const { id, homeTeam, awayTeam } = message;
 
         console.log("Adding event to local storage:", { id, homeTeam, awayTeam, tabId });
@@ -190,7 +190,7 @@
     }
 
     // Add a market to local storage
-    function addMarket(message) {
+    function setMarket(message) {
         const { id, eventId, name } = message;
 
         console.log("Adding market to local storage:", { id, eventId, name });
@@ -225,7 +225,7 @@
     }
 
     // Add a contract to local storage
-    function addContract(message) {
+    function setContract(message) {
         const { id, name, value, marketId, eventId } = message;
 
         console.log("Adding contract to local storage:", { id, name, value, marketId, eventId });
