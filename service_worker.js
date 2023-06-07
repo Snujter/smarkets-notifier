@@ -75,72 +75,41 @@
         });
     });
 
+    function validateRequiredFields(message, requiredFields) {
+        const validationMessages = [];
+        for (const field of requiredFields) {
+            if (!message[field]) {
+                validationMessages.push(`No ${field} found.`);
+            }
+        }
+        return validationMessages;
+    }
+
     function validateMessage(message) {
         let validation = {
             isValid: true,
             messages: [],
         };
         const { type } = message;
+
         switch (type) {
             case "set-event":
-                if (!message.id) {
-                    validation.messages.push("No id found.");
-                }
-                if (!message.homeTeam) {
-                    validation.messages.push("No event home team found.");
-                }
-                if (!message.awayTeam) {
-                    validation.messages.push("No event away team found.");
-                }
+                validation.messages.push(...validateRequiredFields(message, ["id", "homeTeam", "awayTeam"]));
                 break;
             case "remove-event":
-                if (!message.id) {
-                    validation.messages.push("No id found.");
-                }
+                validation.messages.push(...validateRequiredFields(message, ["id"]));
                 break;
             case "set-market":
-                if (!message.id) {
-                    validation.messages.push("No id found.");
-                }
-                if (!message.eventId) {
-                    validation.messages.push("No event id found.");
-                }
-                if (!message.name) {
-                    validation.messages.push("No name found.");
-                }
+                validation.messages.push(...validateRequiredFields(message, ["id", "eventId", "name"]));
                 break;
             case "remove-market":
-                if (!message.id) {
-                    validation.messages.push("No id found.");
-                }
-                if (!message.eventId) {
-                    validation.messages.push("No event id found.");
-                }
+                validation.messages.push(...validateRequiredFields(message, ["id", "eventId"]));
                 break;
             case "set-contract":
-                if (!message.id) {
-                    validation.messages.push("No id found.");
-                }
-                if (!message.eventId) {
-                    validation.messages.push("No event id found.");
-                }
-                if (!message.marketId) {
-                    validation.messages.push("No market id found.");
-                }
-                if (!message.name) {
-                    validation.messages.push("No name found.");
-                }
+                validation.messages.push(...validateRequiredFields(message, ["id", "eventId", "marketId", "name"]));
                 break;
             case "remove-contract":
-                if (!message.id) {
-                    validation.messages.push("No id found.");
-                }
-                if (!message.eventId) {
-                    validation.messages.push("No event id found.");
-                }
-                if (!message.marketId) {
-                    validation.messages.push("No market id found.");
-                }
+                validation.messages.push(...validateRequiredFields(message, ["id", "eventId", "marketId"]));
                 break;
             default:
                 validation.messages.push(`Unknown message type: ${message.type}.`);
