@@ -61,9 +61,10 @@ class MarketElement extends HTMLElement {
         $slot.textContent = value;
     }
 
-    addContract(name, value, status = "inactive") {
+    addContract(id, name, value, status = "inactive") {
         const $contractsSlot = this.shadowRoot.querySelector('slot[name="contracts"]');
         const $contract = document.createElement("contract-element");
+        $contract.setAttribute("id", id);
         $contract.setAttribute("name", name);
         $contract.setAttribute("value", value);
         $contract.setAttribute("status", status);
