@@ -123,6 +123,8 @@ class App {
                 customElements.define("contract-element", ContractElement);
 
                 this.$eventsContainer = document.getElementById("events-container");
+                this.$clearDataBtn = document.getElementById("clear-button");
+                this.$clearDataBtn.addEventListener("click", this.clearData.bind(this));
 
                 this.displayEventsFromLocalStorage();
             });
@@ -147,6 +149,15 @@ class App {
             .catch((error) => {
                 console.error("Failed to load templates:", error);
             });
+    }
+
+    clearData() {
+        var confirmation = confirm("Are you sure you want to clear data?");
+        if (confirmation) {
+            chrome.runtime.sendMessage({ type: "clear-data" }, (response) => {
+                alert(response.message);
+            });
+        }
     }
 
     displayEventsFromLocalStorage() {

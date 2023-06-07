@@ -13,3 +13,17 @@
     color: var(--color-white);
     width: 24rem;
 }
+
+#clear-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#clear-button {
+    margin: auto;
+    background-color: var(--color-gray);
+    color: var(--color-white);
+    padding: 0.5rem;
+    margin: 0 auto;
+}

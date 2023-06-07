@@ -15,6 +15,21 @@
         }
     });
 
+    // Listen for messages from the popup script
+    chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+        console.assert(!sender.tab);
+        if (message.type === "clear-data") {
+            chrome.storage.local.remove(["events", "contracts", "markets"], () => {
+                events = [];
+                markets = [];
+                contracts = [];
+                sendResponse({ message: "Data cleared." });
+            });
+            // Return true to let the popup know this is an async response
+            return true;
+        }
+    });
+
     // Listen for connections from content scripts and the popup script
     chrome.runtime.onConnect.addListener((port) => {
         // Check if the connection is from a content script
