@@ -3,6 +3,8 @@
   "name": "Smarkets Monitor",
   "version": "1.0",
   "permissions": [
+    "tabs",
+    "storage"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -11,6 +13,9 @@
         "32": "icons/favicon-32x32.png",
         "128": "icons/favicon.ico"
       }
+  },
+  "background": {
+    "service_worker": "service_worker.js"
   },
   "content_scripts": [
     {

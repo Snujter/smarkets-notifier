@@ -290,6 +290,16 @@ class Contract {
             this.statusObserver.observe(this.$container.firstChild, Contract.STATUS_OBSERVER_CONFIG);
             this.isStatusObserved = true;
             console.log(`Status observer connected for ${this.id}.`);
+
+            // Send message to service worker with new contract
+            App.PORT.postMessage({
+                type: "add-contract",
+                id: this.id,
+                name: this.name,
+                marketId: this.market.id,
+                eventId: this.event.id,
+                value: this.sellValue,
+            });
         }
     }
 
@@ -298,6 +308,12 @@ class Contract {
             this.statusObserver.disconnect();
             this.isStatusObserved = false;
             console.log(`Status observer disconnected for ${this.id}.`);
+
+            // Send message to service worker with new event
+            App.PORT.postMessage({
+                type: "remove-contract",
+                id: this.id,
+            });
         }
     }
 }
@@ -369,12 +385,26 @@ class Market {
     startObservingContractList() {
         this.contractListObserver = new MutationObserver(this.handleContractListMutation.bind(this));
         this.contractListObserver.observe(this.$container, Market.CONTRACT_LIST_OBSERVER_CONFIG);
+
+        // Send message to service worker with new event
+        App.PORT.postMessage({
+            type: "add-market",
+            id: this.id,
+            eventId: this.event.id,
+            name: this.name,
+        });
     }
 
     stopObservingContractList() {
         if (this.contractListObserve) {
             this.contractListObserve.disconnect();
             this.contractListObserve = null;
+
+            // Send message to service worker with new event
+            App.PORT.postMessage({
+                type: "remove-market",
+                id: this.id,
+            });
         }
     }
 }
@@ -458,12 +488,26 @@ class Event {
     startObservingStatus() {
         this.statusObserver = new MutationObserver(this.handleStatusMutation.bind(this));
         this.statusObserver.observe(this.$statusBadge, Event.STATUS_OBSERVER_CONFIG);
+
+        // Send message to service worker with new event
+        App.PORT.postMessage({
+            type: "add-event",
+            id: this.id,
+            homeTeam: this.homeTeam,
+            awayTeam: this.awayTeam,
+        });
     }
 
     stopObservingStatus() {
         if (this.statusObserver) {
             this.statusObserver.disconnect();
             this.statusObserver = null;
+
+            // Send message to service worker with new event
+            App.PORT.postMessage({
+                type: "remove-event",
+                id: this.id,
+            });
         }
     }
 }
@@ -471,6 +515,7 @@ class Event {
 class App {
     static MUTE_SVG_PATH = chrome.runtime.getURL("images/mute.svg");
     static PING_AUDIO = new Audio(chrome.runtime.getURL("audio/ping.mp3"));
+    static PORT = chrome.runtime.connect({ name: "content-script" });
 
     static generateId(slug) {
         return slug.toLowerCase().replace(/ /g, "-");

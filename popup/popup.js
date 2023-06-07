@@ -124,13 +124,7 @@ class App {
 
                 this.$eventsContainer = document.getElementById("events-container");
 
-                this.backgroundPort = chrome.runtime.connect({ name: "popup-script" });
-
-                this.backgroundPort.onMessage.addListener((message) => {
-                    console.log("Message received in the popup script:", message);
-                });
-
-                this.backgroundPort.postMessage({ text: "Hello from the popup script!" });
+                this.displayEventsFromLocalStorage();
             });
         });
     }
@@ -153,6 +147,56 @@ class App {
             .catch((error) => {
                 console.error("Failed to load templates:", error);
             });
+    }
+
+    displayEventsFromLocalStorage() {
+        this.$eventsContainer.innerHTML = "";
+
+        chrome.storage.local.get(["events", "markets", "contracts"], (result) => {
+            const events = result.events || [];
+            const markets = result.markets || [];
+            const contracts = result.contracts || [];
+
+            console.log("events", events);
+            console.log("markets", markets);
+            console.log("contracts", contracts);
+
+            events.forEach((event) => {
+                // filter out markets for the current event
+                const eventMarkets = markets.filter((market) => market.eventId === event.id);
+                console.log(eventMarkets);
+
+                const $event = document.createElement("event-element");
+                $event.setAttribute("id", event.id);
+                $event.setAttribute("home-team", event.homeTeam);
+                $event.setAttribute("away-team", event.awayTeam);
+                $event.setAttribute("tab-id", event.tabId);
+
+                eventMarkets.forEach((market) => {
+                    // Filter out contracts for the current market
+                    const marketContracts = contracts.filter(
+                        (contract) => contract.eventId === event.id && contract.marketId === market.id
+                    );
+                    console.log(marketContracts);
+                    // Check if market has any contracts, if not don't display it
+                    if (!marketContracts.length) {
+                        return;
+                    }
+
+                    // Add market element to events
+                    const $market = $event.addMarket(market.name);
+                    $market.setAttribute("id", market.id);
+
+                    // Add contract elements for the market element
+                    marketContracts.forEach((contract) => {
+                        const { id, name, value, status } = contract;
+                        $market.addContract(id, name, value, status);
+                    });
+                });
+
+                this.$eventsContainer.appendChild($event);
+            });
+        });
     }
 }
 
