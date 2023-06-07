@@ -125,20 +125,21 @@
     // Add an event to local storage
     function setEvent(message, tabId) {
         const { id, homeTeam, awayTeam } = message;
+        const event = { id, homeTeam, awayTeam };
 
-        console.log("Adding event to local storage:", { id, homeTeam, awayTeam, tabId });
+        console.log("Adding event to local storage:", event);
         const existingEventIndex = events.findIndex((event) => event.id === id && event.tabId === tabId);
 
         if (existingEventIndex !== -1) {
             // Update existing event with new values
-            events[existingEventIndex] = { id, homeTeam, awayTeam, tabId };
+            events[existingEventIndex] = event;
         } else {
             // Add new event to the array
-            events.push({ id, homeTeam, awayTeam, tabId });
+            events.push(event);
         }
 
         chrome.storage.local.set({ events }, () => {
-            console.log("Event added to local storage:", { id, homeTeam, awayTeam, tabId });
+            console.log("Event added to local storage:", event);
         });
     }
 
@@ -161,16 +162,17 @@
     // Add a market to local storage
     function setMarket(message) {
         const { id, eventId, name } = message;
+        const market = { id, eventId, name };
 
-        console.log("Adding market to local storage:", { id, eventId, name });
+        console.log("Adding market to local storage:", market);
         const existingMarketIndex = markets.findIndex((market) => market.id === id);
 
         if (existingMarketIndex !== -1) {
             // Update existing market with new values
-            markets[existingMarketIndex] = { id, eventId, name };
+            markets[existingMarketIndex] = market;
         } else {
             // Add new market to the array
-            markets.push({ id, eventId, name });
+            markets.push(market);
         }
 
         chrome.storage.local.set({ markets }, () => {
@@ -196,20 +198,21 @@
     // Add a contract to local storage
     function setContract(message) {
         const { id, name, value, marketId, eventId } = message;
+        const contract = { id, name, value, status, marketId, eventId };
 
-        console.log("Adding contract to local storage:", { id, name, value, marketId, eventId });
+        console.log("Adding contract to local storage:", contract);
         const existingContractIndex = contracts.findIndex((contract) => contract.id === id);
 
         if (existingContractIndex !== -1) {
             // Update existing contract with new values
-            contracts[existingContractIndex] = { id, name, value, marketId, eventId };
+            contracts[existingContractIndex] = contract;
         } else {
             // Add new contract to the array
-            contracts.push({ id, name, value, marketId, eventId });
+            contracts.push(contract);
         }
 
         chrome.storage.local.set({ contracts }, () => {
-            console.log("Contract added to local storage:", { id, name, value, marketId, eventId });
+            console.log("Contract added to local storage:", contract);
         });
     }
 
