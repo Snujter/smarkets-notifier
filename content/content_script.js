@@ -76,11 +76,11 @@ class Contract {
     }
 
     get $sellTextContainer() {
-        return this.$container.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
+        return this.$container?.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
     }
 
     get $sellText() {
-        return this.$sellTextContainer.querySelector(Contract.SELL_TEXT_SELECTOR);
+        return this.$sellTextContainer?.querySelector(Contract.SELL_TEXT_SELECTOR);
     }
     get sellValue() {
         return this.$sellText.textContent ? parseFloat(this.$sellText.textContent) : 0;
