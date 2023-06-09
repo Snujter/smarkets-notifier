@@ -194,7 +194,41 @@ class App {
         $market.addContract(contract);
     }
 
-    handleUpdateContract(contract) {}
+    handleUpdateContract(contract) {
+        const { id, marketId, eventId } = contract;
+
+        // Otherwise find event
+        const $event = document.getElementById(eventId);
+        if (!$event) {
+            console.log(`Event with id ${eventId} not found`);
+            return;
+        }
+
+        // Find market on event
+        const $market = $event.shadowRoot.getElementById(marketId);
+        if (!$market) {
+            console.log(`Market with id ${marketId} not found`);
+            return;
+        }
+
+        // Find contract on market
+        const $contract = $market.shadowRoot.getElementById(id);
+        if (!$contract) {
+            console.log("No contract found to update.");
+            return;
+        }
+
+        for (let key in contract) {
+            if (key !== "id" && contract.hasOwnProperty(key)) {
+                if (key === "sellValue") {
+                    $contract.setAttribute("sell-value", contract[key]);
+                } else {
+                    $contract.setAttribute(key, contract[key]);
+                }
+            }
+        }
+    }
+
     handleRemoveContract(id) {}
     handleAddEvent(id) {}
     handleRemoveEvent(id) {}
