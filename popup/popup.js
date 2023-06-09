@@ -62,12 +62,12 @@ class MarketElement extends HTMLElement {
     }
 
     addContract(options) {
-        const { id, name, value, status } = options;
+        const { id, name, sellValue, status } = options;
         const $contractsSlot = this.shadowRoot.querySelector('slot[name="contracts"]');
         const $contract = document.createElement("contract-element");
         $contract.setAttribute("id", id);
         $contract.setAttribute("name", name);
-        $contract.setAttribute("value", value || 0);
+        $contract.setAttribute("sell-value", sellValue || 0);
         $contract.setAttribute("status", status || "inactive");
         $contractsSlot.append($contract);
         return $contract;
@@ -78,7 +78,7 @@ class ContractElement extends HTMLElement {
     static TEMPLATE_ID = "contract-template";
 
     static get observedAttributes() {
-        return ["name", "value", "status"];
+        return ["name", "sell-value", "status"];
     }
 
     constructor() {

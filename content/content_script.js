@@ -35,6 +35,26 @@ class Contract {
         this.isStatusObserved = false;
     }
 
+    get upperThreshold() {
+        return parseFloat(this.maxInputElements.$input.value);
+    }
+
+    get lowerThreshold() {
+        return parseFloat(this.minInputElements.$input.value);
+    }
+
+    get status() {
+        if (!this.isSellValueObserved) {
+            return "inactive";
+        }
+
+        if (this.sellValue >= this.upperThreshold || this.sellValue <= this.lowerThreshold) {
+            return "warning";
+        }
+
+        return "active";
+    }
+
     get sellValueObserver() {
         if (!this._sellValueObserver) {
             this._sellValueObserver = new MutationObserver(this.handleSellValueMutation.bind(this));
@@ -107,16 +127,24 @@ class Contract {
         }
 
         this.prevSellValue = this.sellValue;
-        const lowerThreshold = parseFloat(this.minInputElements.$input.value);
-        const upperThreshold = parseFloat(this.maxInputElements.$input.value);
         console.log({
             id: this.id,
             sellValue: this.sellValue,
-            upperThreshold,
-            lowerThreshold,
+            upperThreshold: this.upperThreshold,
+            lowerThreshold: this.lowerThreshold,
+        });
+        App.PORT.postMessage({
+            type: "update-contract",
+            data: {
+                id: this.id,
+                status: this.status,
+                sellValue: this.sellValue,
+                eventId: this.event.id,
+                marketId: this.market.id,
+            },
         });
 
-        if (this.sellValue >= upperThreshold || this.sellValue <= lowerThreshold) {
+        if (this.status === "warning") {
             this.setObserveStatusCircleColor(Contract.CIRCLE_WARNING_COLOR);
             if (!this.isMuted()) {
                 App.PING_AUDIO.play();
@@ -274,6 +302,16 @@ class Contract {
             this.sellValueObserver.observe(this.$sellTextContainer, Contract.SELL_VALUE_OBSERVER_CONFIG);
             this.isSellValueObserved = true;
             console.log(`Sell value observer connected for ${this.id}.`);
+            App.PORT.postMessage({
+                type: "update-contract",
+                data: {
+                    id: this.id,
+                    eventId: this.event.id,
+                    marketId: this.market.id,
+                    status: "active",
+                    sellValue: this.sellValue,
+                },
+            });
         }
     }
 
@@ -282,6 +320,16 @@ class Contract {
             this.sellValueObserver.disconnect();
             this.isSellValueObserved = false;
             console.log(`Sell value observer disconnected for ${this.id}.`);
+            App.PORT.postMessage({
+                type: "update-contract",
+                data: {
+                    id: this.id,
+                    eventId: this.event.id,
+                    marketId: this.market.id,
+                    status: "inactive",
+                    sellValue: this.sellValue,
+                },
+            });
         }
     }
 
@@ -293,12 +341,15 @@ class Contract {
 
             // Send message to service worker with new contract
             App.PORT.postMessage({
-                type: "set-contract",
-                id: this.id,
-                name: this.name,
-                marketId: this.market.id,
-                eventId: this.event.id,
-                value: this.sellValue,
+                type: "add-contract",
+                data: {
+                    id: this.id,
+                    name: this.name,
+                    marketId: this.market.id,
+                    eventId: this.event.id,
+                    sellValue: this.sellValue,
+                    status: "inactive",
+                },
             });
         }
     }
@@ -312,7 +363,9 @@ class Contract {
             // Send message to service worker with new event
             App.PORT.postMessage({
                 type: "remove-contract",
-                id: this.id,
+                data: {
+                    id: this.id,
+                },
             });
         }
     }
@@ -388,10 +441,12 @@ class Market {
 
         // Send message to service worker with new event
         App.PORT.postMessage({
-            type: "set-market",
-            id: this.id,
-            eventId: this.event.id,
-            name: this.name,
+            type: "add-market",
+            data: {
+                id: this.id,
+                eventId: this.event.id,
+                name: this.name,
+            },
         });
     }
 
@@ -403,7 +458,9 @@ class Market {
             // Send message to service worker with new event
             App.PORT.postMessage({
                 type: "remove-market",
-                id: this.id,
+                data: {
+                    id: this.id,
+                },
             });
         }
     }
@@ -491,10 +548,12 @@ class Event {
 
         // Send message to service worker with new event
         App.PORT.postMessage({
-            type: "set-event",
-            id: this.id,
-            homeTeam: this.homeTeam,
-            awayTeam: this.awayTeam,
+            type: "add-event",
+            data: {
+                id: this.id,
+                homeTeam: this.homeTeam,
+                awayTeam: this.awayTeam,
+            },
         });
     }
 
@@ -506,7 +565,9 @@ class Event {
             // Send message to service worker with new event
             App.PORT.postMessage({
                 type: "remove-event",
-                id: this.id,
+                data: {
+                    id: this.id,
+                },
             });
         }
     }
