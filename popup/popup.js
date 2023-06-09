@@ -127,10 +127,58 @@ class App {
                 this.$clearDataBtn = document.getElementById("clear-button");
                 this.$clearDataBtn.addEventListener("click", this.clearData.bind(this));
 
+                this.backgroundPort = chrome.runtime.connect({ name: "popup-script" });
+
+                // Add a listener for messages from the service worker
+                this.backgroundPort.onMessage.addListener((message) => {
+                    const { type, data } = message;
+                    // Handle the incoming message based on its type
+                    switch (type) {
+                        case "add-contract":
+                            this.handleAddContract(data);
+                            break;
+                        case "update-contract":
+                            this.handleUpdateContract(data);
+                            break;
+                        case "remove-contract":
+                            this.handleRemoveContract(data.id);
+                            break;
+                        case "add-event":
+                            this.handleAddEvent(data);
+                            break;
+                        case "update-event":
+                            this.handleUpdateEvent(data);
+                            break;
+                        case "remove-event":
+                            this.handleRemoveEvent(data.id);
+                            break;
+                        case "add-market":
+                            this.handleAddMarket(data);
+                            break;
+                        case "update-market":
+                            this.handleUpdateMarket(data);
+                            break;
+                        case "remove-market":
+                            this.handleRemoveMarket(data.id);
+                            break;
+                        default:
+                            // Handle unknown message types, if needed
+                            break;
+                    }
+                });
+
                 this.displayEventsFromLocalStorage();
             });
         });
     }
+
+    handleAddContract(contract) {}
+    handleUpdateContract(contract) {}
+    handleRemoveContract(id) {}
+    handleAddEvent(id) {}
+    handleRemoveEvent(id) {}
+    handleAddMarket(id) {}
+    handleRemoveMarket(id) {}
 
     loadTemplates(templatePaths) {
         const fetchPromises = templatePaths.map((templatePath) => {

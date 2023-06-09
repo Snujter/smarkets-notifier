@@ -16,6 +16,7 @@ createOffscreen();
 
 (async () => {
     const connections = {};
+    let popupPort;
 
     const savedResult = await chrome.storage.local.get(["events", "markets", "contracts"]);
     let events = savedResult.events || [];
@@ -105,6 +106,11 @@ createOffscreen();
 
             port.onDisconnect.addListener(() => {
                 delete connections[tabId];
+            });
+        } else if (port.name === "popup-script") {
+            popupPort = port;
+            port.onDisconnect.addListener(() => {
+                popupPort = null;
             });
         }
     });
