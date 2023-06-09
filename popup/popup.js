@@ -172,7 +172,28 @@ class App {
         });
     }
 
-    handleAddContract(contract) {}
+    handleAddContract(contract) {
+        console.log("HANDLING ADDED CONTRACT: ", contract);
+        const { eventId, marketId } = contract;
+
+        // Otherwise find event
+        const $event = document.getElementById(eventId);
+        if (!$event) {
+            console.log(`Event with id ${eventId} not found`);
+            return;
+        }
+
+        // Find market on event
+        const $market = $event.shadowRoot.getElementById(marketId);
+        if (!$market) {
+            console.log(`Market with id ${marketId} not found`);
+            return;
+        }
+
+        // Add contract to market
+        $market.addContract(contract);
+    }
+
     handleUpdateContract(contract) {}
     handleRemoveContract(id) {}
     handleAddEvent(id) {}
