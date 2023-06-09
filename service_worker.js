@@ -8,6 +8,20 @@
 
     console.log("markets init: ", markets);
 
+    // Add dirty hack to stop service worker sleeping every 30sec
+    async function createOffscreen() {
+        await chrome.offscreen
+            .createDocument({
+                url: "offscreen/offscreen.html",
+                reasons: ["BLOBS"],
+                justification: "keep service worker running",
+            })
+            .catch(() => {});
+    }
+    chrome.runtime.onStartup.addListener(createOffscreen);
+    self.onmessage = (e) => {}; // keepAlive
+    createOffscreen();
+
     // Add listener for storage changes
     chrome.storage.onChanged.addListener((changes, namespace) => {
         for (let [key, { oldValue, newValue }] of Object.entries(changes)) {

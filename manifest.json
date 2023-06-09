@@ -4,7 +4,8 @@
   "version": "1.0",
   "permissions": [
     "tabs",
-    "storage"
+    "storage",
+    "offscreen"
   ],
   "action": {
     "default_popup": "popup/popup.html",
