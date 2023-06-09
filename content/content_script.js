@@ -103,7 +103,7 @@ class Contract {
         return this.$sellTextContainer?.querySelector(Contract.SELL_TEXT_SELECTOR);
     }
     get sellValue() {
-        return this.$sellText.textContent ? parseFloat(this.$sellText.textContent) : 0;
+        return this.$sellText?.textContent ? parseFloat(this.$sellText.textContent) : 0;
     }
     get isSellValueObserved() {
         return this._isSellValueObserved;
