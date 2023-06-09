@@ -409,7 +409,7 @@ class Market {
                 console.log("Added / removed nodes:");
                 console.log({ addedNodes, removedNodes });
                 addedNodes.forEach((node) => {
-                    const contracts = Contract.fromContainers(node.querySelectorAll(Contract.CONTAINER_SELECTOR));
+                    const contracts = Contract.fromContainers(node.querySelectorAll(Contract.CONTAINER_SELECTOR), this);
                     console.log("New contracts:");
                     console.log(contracts);
 
