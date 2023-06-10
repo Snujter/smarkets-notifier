@@ -145,16 +145,16 @@ createOffscreen();
     }
 
     // Update an existing event
-    function updateEvent(event) {
-        console.log("Updating existing event in local storage:", event);
-        const existingEventIndex = events.findIndex((e) => e.id === event.id);
+    function updateEvent(data) {
+        console.log("Updating existing event in local storage:", data);
+        const existingEventIndex = events.findIndex((event) => event.id === data.id);
         events[existingEventIndex] = {
             ...events[existingEventIndex],
-            ...event,
+            ...data,
         };
 
         chrome.storage.local.set({ events }, () => {
-            console.log("Event updated:", event);
+            console.log("Event updated:", data);
         });
     }
 
@@ -173,35 +173,37 @@ createOffscreen();
     }
 
     // Add a market to local storage
-    function addMarket(market) {
-        markets.push(market);
+    function addMarket(data) {
+        markets.push(data);
 
         chrome.storage.local.set({ markets }, () => {
-            console.log("Market added to local storage:", market);
+            console.log("Market added to local storage:", data);
         });
     }
 
-    // Add a market to local storage
-    function updateMarket(market) {
-        console.log("Updating existing market in local storage:", market);
-        const existingMarketIndex = markets.findIndex((m) => m.id === market.id);
+    // Update a market in local storage
+    function updateMarket(data) {
+        const { id, eventId } = data;
+        console.log("Updating existing market in local storage:", data);
+        const existingMarketIndex = markets.findIndex((market) => market.id === id && market.eventId === eventId);
         markets[existingMarketIndex] = {
             ...markets[existingMarketIndex],
-            ...market,
+            ...data,
         };
 
         chrome.storage.local.set({ markets }, () => {
-            console.log("Market updated:", market);
+            console.log("Market updated:", data);
         });
     }
 
     // Remove a market and its contracts from local storage
-    function removeMarket(id) {
+    function removeMarket(data) {
+        const { id, eventId } = data;
         console.log("Removing market from local storage:", { id });
 
         // Remove markets and contracts with the same id
-        markets = markets.filter((market) => market.id !== id);
-        contracts = contracts.filter((contract) => contract.marketId !== id);
+        markets = markets.filter((market) => market.id !== id && market.eventId !== eventId);
+        contracts = contracts.filter((contract) => contract.marketId !== id && contract.eventId !== eventId);
 
         chrome.storage.local.set({ markets, contracts }, () => {
             console.log("Market and its contracts removed from local storage:", { id, eventId });
@@ -209,33 +211,39 @@ createOffscreen();
     }
 
     // Add a contract to local storage
-    function addContract(contract) {
-        console.log("Adding contract to local storage:", contract);
-        contracts.push(contract);
+    function addContract(data) {
+        console.log("Adding contract to local storage:", data);
+        contracts.push(data);
 
         chrome.storage.local.set({ contracts }, () => {
-            console.log("Contract added to local storage:", contract);
+            console.log("Contract added to local storage:", data);
         });
     }
 
-    // Add a contract to local storage
-    function updateContract(contract) {
-        console.log("Updating existing contract in local storage:", contract);
-        const existingContractIndex = contracts.findIndex((m) => m.id === contract.id);
+    // Update a contract in local storage
+    function updateContract(data) {
+        const { id, eventId, marketId } = data;
+        console.log("Updating existing contract in local storage:", data);
+        const existingContractIndex = contracts.findIndex(
+            (contract) => contract.id === id && contract.marketId === marketId && contract.eventId === eventId
+        );
         contracts[existingContractIndex] = {
             ...contracts[existingContractIndex],
-            ...contract,
+            ...data,
         };
 
         chrome.storage.local.set({ contracts }, () => {
-            console.log("Contract updated:", contract);
+            console.log("Contract updated:", data);
         });
     }
 
     // Remove a contract from local storage
-    function removeContract(id) {
+    function removeContract(data) {
+        const { id, eventId, marketId } = data;
         console.log("Removing contract from local storage:", { id });
-        const updatedContracts = contracts.filter((contract) => contract.id !== id);
+        const updatedContracts = contracts.filter(
+            (contract) => contract.id !== id && contract.marketId !== marketId && contract.eventId !== eventId
+        );
 
         chrome.storage.local.set({ contracts: updatedContracts }, () => {
             console.log("Contract removed from local storage:", { id });

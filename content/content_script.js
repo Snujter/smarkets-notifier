@@ -286,8 +286,10 @@ class Contract {
     }
 
     startObservingSellValue() {
+        console.log("Doing checks for sell value observation...");
         // If it's already observed or not inserted in the DOM then pointless to check
         if (this.isSellValueObserved || !this.inserted) {
+            console.log("Sell value already observed or not inserted in DOM.");
             return;
         }
 
@@ -299,6 +301,7 @@ class Contract {
             parseFloat(this.minInputElements.$input.value) > 0 || parseFloat(this.maxInputElements.$input.value) > 0;
 
         if (hasValidSellTextContainer && hasValidInputValues) {
+            console.log("Attempting sell value observation...");
             this.sellValueObserver.observe(this.$sellTextContainer, Contract.SELL_VALUE_OBSERVER_CONFIG);
             this.isSellValueObserved = true;
             console.log(`Sell value observer connected for ${this.id}.`);
@@ -308,8 +311,8 @@ class Contract {
                     id: this.id,
                     eventId: this.event.id,
                     marketId: this.market.id,
-                    status: "active",
                     sellValue: this.sellValue,
+                    status: "active",
                 },
             });
         }
@@ -326,8 +329,8 @@ class Contract {
                     id: this.id,
                     eventId: this.event.id,
                     marketId: this.market.id,
-                    status: "inactive",
                     sellValue: this.sellValue,
+                    status: "inactive",
                 },
             });
         }
@@ -365,6 +368,8 @@ class Contract {
                 type: "remove-contract",
                 data: {
                     id: this.id,
+                    marketId: this.market.id,
+                    eventId: this.event.id,
                 },
             });
         }
@@ -460,6 +465,7 @@ class Market {
                 type: "remove-market",
                 data: {
                     id: this.id,
+                    eventId: this.event.id,
                 },
             });
         }
