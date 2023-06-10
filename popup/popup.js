@@ -269,6 +269,7 @@ class App {
             const events = result.events || [];
             const markets = result.markets || [];
             const contracts = result.contracts || [];
+            events.reverse(); // get latest added events first
 
             console.log("events", events);
             console.log("markets", markets);
