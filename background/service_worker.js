@@ -23,19 +23,6 @@ createOffscreen();
     let markets = savedResult.markets || [];
     let contracts = savedResult.contracts || [];
 
-    const MSG_FROM_CONTENT_SCRIPT_VALIDATION = [
-        { type: "add-event", requiredFields: ["id", "homeTeam", "awayTeam"], notFoundIn: events },
-        { type: "update-event", requiredFields: ["id"], foundIn: events },
-        { type: "remove-event", requiredFields: ["id"], foundIn: events },
-        { type: "add-market", requiredFields: ["id", "eventId", "name"], notFoundIn: markets },
-        { type: "update-market", requiredFields: ["id"], foundIn: markets },
-        { type: "remove-market", requiredFields: ["id"], foundIn: markets },
-        { type: "add-contract", requiredFields: ["id", "eventId", "marketId", "name"], notFoundIn: contracts },
-        { type: "update-contract", requiredFields: ["id", "eventId", "marketId"], foundIn: contracts },
-        { type: "remove-contract", requiredFields: ["id"], foundIn: contracts },
-    ];
-    const validator = new MessageValidator(MSG_FROM_CONTENT_SCRIPT_VALIDATION);
-
     // Listen for messages from the popup script
     chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         console.assert(!sender.tab);
@@ -61,50 +48,87 @@ createOffscreen();
             port.onMessage.addListener((message) => {
                 const { type, data } = message;
 
-                // Do some basic validation
-                if (!validator.validateMessage(type, data)) {
-                    console.error(validator.errorMessages);
-                    return;
-                }
+                const validator = new MessageValidator(message);
 
                 switch (type) {
                     case "add-event":
-                        addEvent(data, tabId);
+                        validator.requiredDataFields = ["id", "homeTeam", "awayTeam"];
+                        validator.notFoundIn = { fields: ["id"], searchArray: events };
+
+                        validator.onValidationSuccess = addEvent.bind(null, data, tabId);
                         break;
                     case "update-event":
-                        updateEvent(data);
+                        validator.requiredDataFields = ["id"];
+                        validator.foundIn = { fields: ["id"], searchArray: events };
+
+                        validator.onValidationSuccess = updateEvent.bind(null, data);
                         break;
                     case "remove-event":
-                        removeEvent(data.id);
+                        validator.requiredDataFields = ["id"];
+                        validator.foundIn = { fields: ["id"], searchArray: events };
+
+                        validator.onValidationSuccess = removeEvent.bind(null, data.id);
                         break;
                     case "add-market":
-                        addMarket(data);
+                        validator.requiredDataFields = ["id", "eventId", "name"];
+                        validator.notFoundIn = { fields: ["id", "eventId"], searchArray: markets };
+
+                        validator.onValidationSuccess = addMarket.bind(null, data);
                         break;
                     case "update-market":
-                        updateMarket(data);
+                        validator.requiredDataFields = ["id", "eventId"];
+                        validator.foundIn = { fields: ["id", "eventId"], searchArray: markets };
+
+                        validator.onValidationSuccess = updateMarket.bind(null, data);
                         break;
                     case "remove-market":
-                        removeMarket(data.id);
+                        validator.requiredDataFields = ["id", "eventId"];
+                        validator.foundIn = { fields: ["id", "eventId"], searchArray: markets };
+
+                        validator.onValidationSuccess = removeMarket.bind(null, data);
                         break;
                     case "add-contract":
-                        addContract(data);
+                        validator.requiredDataFields = ["id", "eventId", "marketId", "name"];
+                        validator.notFoundIn = { fields: ["id", "eventId", "marketId"], searchArray: contracts };
+
+                        validator.onValidationSuccess = addContract.bind(null, data);
                         break;
                     case "update-contract":
-                        updateContract(data);
+                        validator.requiredDataFields = ["id", "eventId", "marketId"];
+                        validator.foundIn = { fields: ["id", "eventId", "marketId"], searchArray: contracts };
+
+                        validator.onValidationSuccess = updateContract.bind(null, data);
                         break;
                     case "remove-contract":
-                        removeContract(data.id);
+                        validator.requiredDataFields = ["id", "eventId", "marketId"];
+                        validator.foundIn = { fields: ["id", "eventId", "marketId"], searchArray: contracts };
+
+                        validator.onValidationSuccess = removeContract.bind(null, data);
                         break;
+                    default:
+                        return;
                 }
 
-                // Send message to popup script for instant updates
-                if (popupPort) {
-                    console.log(popupPort);
-                    popupPort.postMessage(message);
-                }
+                validator
+                    .validate()
+                    .then(async (callback) => {
+                        callback();
+                        // Send message to popup script for instant updates
+                        if (popupPort) {
+                            console.log(popupPort);
+                            popupPort.postMessage(message);
+                        }
+                    })
+                    .catch((response) => {
+                        console.warn("An error happened during validation, skipping: ", {
+                            errors: response.errors,
+                            message: response.message,
+                        });
+                    });
             });
 
             port.onDisconnect.addListener(() => {
+                console.log("Port disconnected in SERVICE WORKER.");
                 delete connections[tabId];
             });
         } else if (port.name === "popup-script") {
