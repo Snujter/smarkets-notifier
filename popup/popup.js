@@ -127,10 +127,8 @@ class App {
                 this.$clearDataBtn = document.getElementById("clear-button");
                 this.$clearDataBtn.addEventListener("click", this.clearData.bind(this));
 
-                this.backgroundPort = chrome.runtime.connect({ name: "popup-script" });
-
                 // Add a listener for messages from the service worker
-                this.backgroundPort.onMessage.addListener((message) => {
+                chrome.runtime.onMessage.addListener((message) => {
                     const { type, data } = message;
                     // Handle the incoming message based on its type
                     switch (type) {

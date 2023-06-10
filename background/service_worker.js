@@ -16,7 +16,6 @@ createOffscreen();
 
 (async () => {
     const connections = {};
-    let popupPort;
 
     const savedResult = await chrome.storage.local.get(["events", "markets", "contracts"]);
     let events = savedResult.events || [];
@@ -38,7 +37,7 @@ createOffscreen();
         }
     });
 
-    // Listen for connections from content scripts and the popup script
+    // Listen for connections from content scripts
     chrome.runtime.onConnect.addListener((port) => {
         // Check if the connection is from a content script
         if (port.name === "content-script") {
@@ -114,10 +113,12 @@ createOffscreen();
                     .then(async (callback) => {
                         callback();
                         // Send message to popup script for instant updates
-                        if (popupPort) {
-                            console.log(popupPort);
-                            popupPort.postMessage(message);
-                        }
+                        chrome.runtime.sendMessage(message, (response) => {
+                            // If popup is open
+                            if (!chrome.runtime.lastError) {
+                                console.log("Message sent to popup:", response);
+                            }
+                        });
                     })
                     .catch((response) => {
                         console.warn("An error happened during validation, skipping: ", {
@@ -130,11 +131,6 @@ createOffscreen();
             port.onDisconnect.addListener(() => {
                 console.log("Port disconnected in SERVICE WORKER.");
                 delete connections[tabId];
-            });
-        } else if (port.name === "popup-script") {
-            popupPort = port;
-            port.onDisconnect.addListener(() => {
-                popupPort = null;
             });
         }
     });
