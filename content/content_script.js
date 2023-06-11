@@ -602,40 +602,6 @@ class App {
         return slug.toLowerCase().replace(/ /g, "-");
     }
 
-    static postEventMessage(type, event) {
-        let data;
-        if (type === "add-event") {
-            data = {
-                id: event.id,
-                homeTeam: event.homeTeam,
-                awayTeam: event.awayTeam,
-            };
-        } else if (type === "remove-event") {
-            data = {
-                id: event.id,
-            };
-        }
-
-        App.PORT.postMessage({ type, data });
-    }
-
-    static postMarketMessage(type, market) {
-        let data;
-        if (type === "add-market") {
-            data = {
-                id: market.id,
-                homeTeam: market.homeTeam,
-                awayTeam: market.awayTeam,
-            };
-        } else if (type === "remove-market") {
-            data = {
-                id: event.id,
-            };
-        }
-
-        App.PORT.postMessage({ type, data });
-    }
-
     constructor() {
         this.event = null;
     }
