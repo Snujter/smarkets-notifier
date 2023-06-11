@@ -1,4 +1,4 @@
-class Contract {
+class ContractExtractor {
     static SELL_VALUE_OBSERVER_CONFIG = { childList: true, characterData: true, subtree: true };
     static STATUS_OBSERVER_CONFIG = { attributes: true, attributeFilter: ["class"] };
     static CONTAINER_SELECTOR = ".contract-wrapper";
@@ -11,7 +11,7 @@ class Contract {
 
     static fromContainers($wrappers, market) {
         const contracts = Array.from($wrappers)
-            .map(($contractContainer) => new Contract($contractContainer, market))
+            .map(($contractContainer) => new ContractExtractor($contractContainer, market))
             .filter(Boolean); // Remove null values
 
         return contracts;
@@ -25,7 +25,7 @@ class Contract {
         this.event = market.event;
         this.prevSellValue = 0;
         this.$observeStatusCircle = this.createObserveStatusCircle();
-        this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
+        this.setObserveStatusCircleColor(ContractExtractor.CIRCLE_DEFAULT_COLOR);
         this.minInputElements = this.createInput("Below");
         this.maxInputElements = this.createInput("Above");
         this.$toggleBtn = this.createToggleButton();
@@ -83,7 +83,7 @@ class Contract {
             return;
         }
 
-        const name = $newContainer.querySelector(Contract.NAME_SELECTOR)?.innerText || "";
+        const name = $newContainer.querySelector(ContractExtractor.NAME_SELECTOR)?.innerText || "";
         if (!name) {
             console.log(`Invalid name - skipping contract.`);
             return;
@@ -96,11 +96,11 @@ class Contract {
     }
 
     get $sellTextContainer() {
-        return this.$container?.querySelector(Contract.SELL_TEXT_CONTAINER_SELECTOR);
+        return this.$container?.querySelector(ContractExtractor.SELL_TEXT_CONTAINER_SELECTOR);
     }
 
     get $sellText() {
-        return this.$sellTextContainer?.querySelector(Contract.SELL_TEXT_SELECTOR);
+        return this.$sellTextContainer?.querySelector(ContractExtractor.SELL_TEXT_SELECTOR);
     }
     get sellValue() {
         return this.$sellText?.textContent ? parseFloat(this.$sellText.textContent) : 0;
@@ -145,12 +145,12 @@ class Contract {
         });
 
         if (this.status === "warning") {
-            this.setObserveStatusCircleColor(Contract.CIRCLE_WARNING_COLOR);
+            this.setObserveStatusCircleColor(ContractExtractor.CIRCLE_WARNING_COLOR);
             if (!this.isMuted()) {
                 App.PING_AUDIO.play();
             }
         } else {
-            this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
+            this.setObserveStatusCircleColor(ContractExtractor.CIRCLE_DEFAULT_COLOR);
         }
     }
 
@@ -158,10 +158,10 @@ class Contract {
         console.log(mutationsList);
         for (let mutation of mutationsList) {
             if (mutation.target.classList.contains("halted")) {
-                console.log("Contract halted, stopping sell value observation.");
+                console.log("ContractExtractor halted, stopping sell value observation.");
                 this.stopObservingSellValue();
             } else {
-                console.log("Contract resuming, starting sell value observation.");
+                console.log("ContractExtractor resuming, starting sell value observation.");
                 this.startObservingSellValue();
             }
         }
@@ -212,7 +212,7 @@ class Contract {
 
     handleInput(e) {
         const value = parseFloat(e.target.value);
-        this.setObserveStatusCircleColor(Contract.CIRCLE_DEFAULT_COLOR);
+        this.setObserveStatusCircleColor(ContractExtractor.CIRCLE_DEFAULT_COLOR);
         if (value > 0) {
             e.target.style.opacity = "1";
             this.startObservingSellValue();
@@ -244,7 +244,7 @@ class Contract {
 
     insertOptionsIntoDOM() {
         if (this.inserted) {
-            console.log(`Contract ${this.id} is already inserted into DOM.`);
+            console.log(`ContractExtractor ${this.id} is already inserted into DOM.`);
             return;
         }
 
@@ -302,7 +302,7 @@ class Contract {
 
         if (hasValidSellTextContainer && hasValidInputValues) {
             console.log("Attempting sell value observation...");
-            this.sellValueObserver.observe(this.$sellTextContainer, Contract.SELL_VALUE_OBSERVER_CONFIG);
+            this.sellValueObserver.observe(this.$sellTextContainer, ContractExtractor.SELL_VALUE_OBSERVER_CONFIG);
             this.isSellValueObserved = true;
             console.log(`Sell value observer connected for ${this.id}.`);
             App.PORT.postMessage({
@@ -338,7 +338,7 @@ class Contract {
 
     startObservingStatus() {
         if (this.inserted && !this.isStatusObserved && this.$container?.firstChild instanceof Node) {
-            this.statusObserver.observe(this.$container.firstChild, Contract.STATUS_OBSERVER_CONFIG);
+            this.statusObserver.observe(this.$container.firstChild, ContractExtractor.STATUS_OBSERVER_CONFIG);
             this.isStatusObserved = true;
             console.log(`Status observer connected for ${this.id}.`);
 
@@ -376,14 +376,14 @@ class Contract {
     }
 }
 
-class Market {
+class MarketExtractor {
     static CONTRACT_LIST_OBSERVER_CONFIG = { childList: true };
     static CONTAINER_SELECTOR = ".market-container";
     static NAME_SELECTOR = ".market-name";
 
     static fromContainers($wrappers, event) {
         const markets = Array.from($wrappers)
-            .map(($container) => new Market($container, event))
+            .map(($container) => new MarketExtractor($container, event))
             .filter(Boolean); // Remove null values
 
         return markets;
@@ -393,9 +393,12 @@ class Market {
         this.contractListObserver = null;
         this.$container = $container;
         this.event = event;
-        this.name = $container.querySelector(Market.NAME_SELECTOR).textContent || "";
+        this.name = $container.querySelector(MarketExtractor.NAME_SELECTOR).textContent || "";
         this.id = App.generateId(this.name);
-        this.contracts = Contract.fromContainers($container.querySelectorAll(Contract.CONTAINER_SELECTOR), this);
+        this.contracts = ContractExtractor.fromContainers(
+            $container.querySelectorAll(ContractExtractor.CONTAINER_SELECTOR),
+            this
+        );
         this.contracts.forEach((contract) => {
             contract.insertOptionsIntoDOM();
         });
@@ -414,7 +417,10 @@ class Market {
                 console.log("Added / removed nodes:");
                 console.log({ addedNodes, removedNodes });
                 addedNodes.forEach((node) => {
-                    const contracts = Contract.fromContainers(node.querySelectorAll(Contract.CONTAINER_SELECTOR), this);
+                    const contracts = ContractExtractor.fromContainers(
+                        node.querySelectorAll(ContractExtractor.CONTAINER_SELECTOR),
+                        this
+                    );
                     console.log("New contracts:");
                     console.log(contracts);
 
@@ -442,7 +448,7 @@ class Market {
 
     startObservingContractList() {
         this.contractListObserver = new MutationObserver(this.handleContractListMutation.bind(this));
-        this.contractListObserver.observe(this.$container, Market.CONTRACT_LIST_OBSERVER_CONFIG);
+        this.contractListObserver.observe(this.$container, MarketExtractor.CONTRACT_LIST_OBSERVER_CONFIG);
 
         // Send message to service worker with new event
         App.PORT.postMessage({
@@ -472,7 +478,7 @@ class Market {
     }
 }
 
-class Event {
+class EventExtractor {
     static STATUS_BADGE_SELECTOR = ".event-badge";
     static STATUS_BADGE_COMPLETED_CLASS = "-complete";
     static PLAYERS_SELECTOR = ".name.competitor";
@@ -485,7 +491,7 @@ class Event {
         this.markets = [];
 
         // Set up status badge
-        this.$statusBadge = document.querySelector(Event.STATUS_BADGE_SELECTOR);
+        this.$statusBadge = document.querySelector(EventExtractor.STATUS_BADGE_SELECTOR);
         if (!this.$statusBadge) {
             console.log("Status badge not found, stopping event setup.");
             console.log(document);
@@ -493,12 +499,12 @@ class Event {
             return;
         }
         if (this.hasEnded()) {
-            console.log("Event finished, stopping event setup.");
+            console.log("EventExtractor finished, stopping event setup.");
             return;
         }
 
         // Set up players
-        const players = Array.from(document.querySelectorAll(Event.PLAYERS_SELECTOR)).map(($player) =>
+        const players = Array.from(document.querySelectorAll(EventExtractor.PLAYERS_SELECTOR)).map(($player) =>
             $player.textContent.trim()
         );
         this.homeTeam = players[0] || "";
@@ -514,17 +520,17 @@ class Event {
         this.id = App.generateId(`${this.homeTeam}-${this.awayTeam}`);
 
         // Set up markets
-        const $marketContainers = Array.from(document.querySelectorAll(Market.CONTAINER_SELECTOR)).map(
+        const $marketContainers = Array.from(document.querySelectorAll(MarketExtractor.CONTAINER_SELECTOR)).map(
             ($container) => $container.firstElementChild
         );
-        this.markets = Market.fromContainers($marketContainers, this);
+        this.markets = MarketExtractor.fromContainers($marketContainers, this);
 
         // Start observing status badge
         this.startObservingStatus();
     }
 
     hasEnded() {
-        return this.$statusBadge.classList.contains(Event.STATUS_BADGE_COMPLETED_CLASS);
+        return this.$statusBadge.classList.contains(EventExtractor.STATUS_BADGE_COMPLETED_CLASS);
     }
 
     handleStatusMutation(mutationsList, observer) {
@@ -533,7 +539,7 @@ class Event {
         for (let mutation of mutationsList) {
             if (mutation.type === "attributes" && mutation.attributeName === "class") {
                 const currentClasses = mutation.target.classList;
-                if (currentClasses.contains(Event.STATUS_BADGE_COMPLETED_CLASS)) {
+                if (currentClasses.contains(EventExtractor.STATUS_BADGE_COMPLETED_CLASS)) {
                     console.log("Event finished, starting cleanup...");
                     this.stopObservingStatus();
                     // Clean up market & contract observers
@@ -550,7 +556,7 @@ class Event {
 
     startObservingStatus() {
         this.statusObserver = new MutationObserver(this.handleStatusMutation.bind(this));
-        this.statusObserver.observe(this.$statusBadge, Event.STATUS_OBSERVER_CONFIG);
+        this.statusObserver.observe(this.$statusBadge, EventExtractor.STATUS_OBSERVER_CONFIG);
 
         // Send message to service worker with new event
         App.PORT.postMessage({
@@ -589,7 +595,7 @@ class App {
     }
 
     constructor() {
-        this.event = new Event();
+        this.event = new EventExtractor();
         if (!this.event.markets || this.event.markets.length == 0) {
             console.log("No markets found.");
             return;
