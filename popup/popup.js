@@ -25,10 +25,13 @@ class EventElement extends HTMLElement {
         slotElement.textContent = value;
     }
 
-    addMarket(name) {
+    addMarket(market) {
+        const { id, name, eventId } = market;
         const $marketsSlot = this.shadowRoot.querySelector('slot[name="markets"]');
         const $market = document.createElement("market-element");
+        $market.setAttribute("id", id);
         $market.setAttribute("name", name);
+        $market.setAttribute("event-id", eventId);
         $marketsSlot.append($market);
         return $market;
     }
@@ -297,8 +300,7 @@ class App {
                     }
 
                     // Add market element to events
-                    const $market = $event.addMarket(market.name);
-                    $market.setAttribute("id", market.id);
+                    const $market = $event.addMarket(market);
 
                     // Add contract elements for the market element
                     marketContracts.forEach((contract) => {
