@@ -9,30 +9,39 @@ class ContractExtractor {
     static CIRCLE_DEFAULT_COLOR = "#00CA84";
     static CIRCLE_WARNING_COLOR = "#FF8000";
 
-    static fromContainers($wrappers, market) {
-        const contracts = Array.from($wrappers)
-            .map(($contractContainer) => new ContractExtractor($contractContainer, market))
-            .filter(Boolean); // Remove null values
-
+    static initFromContainers($wrappers, market) {
+        let contracts = [];
+        Array.from($wrappers).forEach(($contractContainer) => {
+            const contract = new ContractExtractor(market);
+            contract.init($contractContainer);
+            contracts.push(contract);
+        });
         return contracts;
     }
 
-    constructor($container, market) {
+    constructor(market) {
         this.id = null; // gets set up when setting $container
         this.name = null; // gets set up when setting $container
         this._$container = null; // gets set up when setting $container
         this.market = market;
         this.event = market.event;
         this.prevSellValue = 0;
+        this.$observeStatusCircle = null;
+        this.minInputElements = null;
+        this.maxInputElements = null;
+        this.$toggleBtn = null;
+        this.inserted = false;
+        this.isSellValueObserved = false;
+        this.isStatusObserved = false;
+    }
+
+    init($container) {
         this.$observeStatusCircle = this.createObserveStatusCircle();
         this.setObserveStatusCircleColor(ContractExtractor.CIRCLE_DEFAULT_COLOR);
         this.minInputElements = this.createInput("Below");
         this.maxInputElements = this.createInput("Above");
         this.$toggleBtn = this.createToggleButton();
         this.$container = $container;
-        this.inserted = false;
-        this.isSellValueObserved = false;
-        this.isStatusObserved = false;
     }
 
     get upperThreshold() {
@@ -110,7 +119,9 @@ class ContractExtractor {
     }
     set isSellValueObserved(newValue) {
         this._isSellValueObserved = newValue;
-        this.$observeStatusCircle.style.opacity = newValue ? "1" : "0.4";
+        if (this.$observeStatusCircle) {
+            this.$observeStatusCircle.style.opacity = newValue ? "1" : "0.4";
+        }
     }
 
     handleSellValueMutation(mutationsList, observer) {
@@ -381,29 +392,33 @@ class MarketExtractor {
     static CONTAINER_SELECTOR = ".market-container";
     static NAME_SELECTOR = ".market-name";
 
-    static fromContainers($wrappers, event) {
-        const markets = Array.from($wrappers)
-            .map(($container) => new MarketExtractor($container, event))
-            .filter(Boolean); // Remove null values
-
+    static initFromContainers($wrappers, event) {
+        let markets = [];
+        Array.from($wrappers).forEach(($wrapper) => {
+            const market = new MarketExtractor(event);
+            market.init($wrapper);
+            markets.push(market);
+        });
         return markets;
     }
 
-    constructor($container, event) {
+    constructor(event) {
         this.contractListObserver = null;
-        this.$container = $container;
+        this.$container = null;
         this.event = event;
-        this.name = $container.querySelector(MarketExtractor.NAME_SELECTOR).textContent || "";
-        this.id = App.generateId(this.name);
-        this.contracts = ContractExtractor.fromContainers(
+        this.name = null;
+        this.id = null;
+        this.contracts = [];
+    }
+
+    init($container) {
+        this.$container = $container;
+        this.contracts = ContractExtractor.initFromContainers(
             $container.querySelectorAll(ContractExtractor.CONTAINER_SELECTOR),
             this
         );
-        this.contracts.forEach((contract) => {
-            contract.insertOptionsIntoDOM();
-        });
-
-        this.startObservingContractList();
+        this.name = $container.querySelector(MarketExtractor.NAME_SELECTOR).textContent || "";
+        this.id = App.generateId(this.name);
     }
 
     handleContractListMutation(mutationsList, observer) {
@@ -417,7 +432,7 @@ class MarketExtractor {
                 console.log("Added / removed nodes:");
                 console.log({ addedNodes, removedNodes });
                 addedNodes.forEach((node) => {
-                    const contracts = ContractExtractor.fromContainers(
+                    const contracts = ContractExtractor.initFromContainers(
                         node.querySelectorAll(ContractExtractor.CONTAINER_SELECTOR),
                         this
                     );
@@ -430,8 +445,8 @@ class MarketExtractor {
                             existingContract.$container = contract.$container;
                             existingContract.insertOptionsIntoDOM();
                         } else {
-                            this.contracts.push(contract);
                             contract.insertOptionsIntoDOM();
+                            this.contracts.push(contract);
                         }
                     });
                 });
@@ -489,7 +504,10 @@ class EventExtractor {
         this.homeTeam = null;
         this.awayTeam = null;
         this.markets = [];
+        this.$statusBadge = null;
+    }
 
+    init() {
         // Set up status badge
         this.$statusBadge = document.querySelector(EventExtractor.STATUS_BADGE_SELECTOR);
         if (!this.$statusBadge) {
@@ -499,7 +517,7 @@ class EventExtractor {
             return;
         }
         if (this.hasEnded()) {
-            console.log("EventExtractor finished, stopping event setup.");
+            console.log("Event finished, stopping event setup.");
             return;
         }
 
@@ -523,10 +541,7 @@ class EventExtractor {
         const $marketContainers = Array.from(document.querySelectorAll(MarketExtractor.CONTAINER_SELECTOR)).map(
             ($container) => $container.firstElementChild
         );
-        this.markets = MarketExtractor.fromContainers($marketContainers, this);
-
-        // Start observing status badge
-        this.startObservingStatus();
+        this.markets = MarketExtractor.initFromContainers($marketContainers, this);
     }
 
     hasEnded() {
@@ -540,15 +555,8 @@ class EventExtractor {
             if (mutation.type === "attributes" && mutation.attributeName === "class") {
                 const currentClasses = mutation.target.classList;
                 if (currentClasses.contains(EventExtractor.STATUS_BADGE_COMPLETED_CLASS)) {
-                    console.log("Event finished, starting cleanup...");
-                    this.stopObservingStatus();
-                    // Clean up market & contract observers
-                    this.markets.forEach((market) => {
-                        market.stopObservingContractList();
-                        market.contracts.forEach((contract) => {
-                            contract.removeOptionsFromDOM();
-                        });
-                    });
+                    const customEvent = new CustomEvent("event-status-change", { detail: { status: "completed" } });
+                    document.dispatchEvent(customEvent);
                 }
             }
         }
@@ -594,16 +602,98 @@ class App {
         return slug.toLowerCase().replace(/ /g, "-");
     }
 
+    static postEventMessage(type, event) {
+        let data;
+        if (type === "add-event") {
+            data = {
+                id: event.id,
+                homeTeam: event.homeTeam,
+                awayTeam: event.awayTeam,
+            };
+        } else if (type === "remove-event") {
+            data = {
+                id: event.id,
+            };
+        }
+
+        App.PORT.postMessage({ type, data });
+    }
+
+    static postMarketMessage(type, market) {
+        let data;
+        if (type === "add-market") {
+            data = {
+                id: market.id,
+                homeTeam: market.homeTeam,
+                awayTeam: market.awayTeam,
+            };
+        } else if (type === "remove-market") {
+            data = {
+                id: event.id,
+            };
+        }
+
+        App.PORT.postMessage({ type, data });
+    }
+
     constructor() {
+        this.event = null;
+    }
+
+    init() {
+        // Set up event
         this.event = new EventExtractor();
+        this.event.init();
         if (!this.event.markets || this.event.markets.length == 0) {
             console.log("No markets found.");
             return;
         }
+
+        this.event.markets.forEach((market) => {
+            // market.init();
+            market.contracts.forEach((contract) => {
+                // contract.init();
+                contract.insertOptionsIntoDOM();
+            });
+        });
+    }
+
+    startMonitoring() {
+        this.event.startObservingStatus();
+        this.event.markets.forEach((market) => {
+            market.startObservingContractList();
+            market.contracts.forEach((contract) => {
+                contract.startObservingStatus();
+            });
+        });
+    }
+
+    stopMonitoring() {
+        this.event.stopObservingStatus();
+        this.event.markets.forEach((market) => {
+            market.stopObservingContractList();
+            market.contracts.forEach((contract) => {
+                contract.stopObservingStatus();
+                contract.stopObservingSellValue();
+            });
+        });
     }
 }
 
+const app = new App();
+
 window.addEventListener("load", () => {
     console.log("DOM fully loaded and parsed. Creating new App instance and starting monitoring...");
-    const app = new App();
+    app.init();
+    app.startMonitoring();
+
+    document.addEventListener("event-status-change", (data) => {
+        if (data.status === "completed") {
+            app.stopMonitoring();
+        }
+    });
+});
+
+window.addEventListener("beforeunload", () => {
+    app.stopMonitoring();
 });
