@@ -194,11 +194,6 @@ class MessageValidator {
      */
     areFieldsInArray(data, fields, searchArray) {
         return searchArray.some((obj) => {
-            console.log(obj);
-            console.log(fields);
-            console.log(data);
-            debugger;
-
             for (let field of fields) {
                 if (obj[field] !== data[field]) {
                     return false;

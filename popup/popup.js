@@ -291,7 +291,6 @@ class App {
                     const marketContracts = contracts.filter(
                         (contract) => contract.eventId === event.id && contract.marketId === market.id
                     );
-                    console.log(marketContracts);
                     // Check if market has any contracts, if not don't display it
                     if (!marketContracts.length) {
                         return;
