@@ -144,7 +144,7 @@ class ContractExtractor {
             upperThreshold: this.upperThreshold,
             lowerThreshold: this.lowerThreshold,
         });
-        App.PORT.postMessage({
+        App.sendMessage({
             type: "update-contract",
             data: {
                 id: this.id,
@@ -316,7 +316,7 @@ class ContractExtractor {
             this.sellValueObserver.observe(this.$sellTextContainer, ContractExtractor.SELL_VALUE_OBSERVER_CONFIG);
             this.isSellValueObserved = true;
             console.log(`Sell value observer connected for ${this.id}.`);
-            App.PORT.postMessage({
+            App.sendMessage({
                 type: "update-contract",
                 data: {
                     id: this.id,
@@ -334,7 +334,7 @@ class ContractExtractor {
             this.sellValueObserver.disconnect();
             this.isSellValueObserved = false;
             console.log(`Sell value observer disconnected for ${this.id}.`);
-            App.PORT.postMessage({
+            App.sendMessage({
                 type: "update-contract",
                 data: {
                     id: this.id,
@@ -354,7 +354,7 @@ class ContractExtractor {
             console.log(`Status observer connected for ${this.id}.`);
 
             // Send message to service worker with new contract
-            App.PORT.postMessage({
+            App.sendMessage({
                 type: "add-contract",
                 data: {
                     id: this.id,
@@ -375,7 +375,7 @@ class ContractExtractor {
             console.log(`Status observer disconnected for ${this.id}.`);
 
             // Send message to service worker with new event
-            App.PORT.postMessage({
+            App.sendMessage({
                 type: "remove-contract",
                 data: {
                     id: this.id,
@@ -466,7 +466,7 @@ class MarketExtractor {
         this.contractListObserver.observe(this.$container, MarketExtractor.CONTRACT_LIST_OBSERVER_CONFIG);
 
         // Send message to service worker with new event
-        App.PORT.postMessage({
+        App.sendMessage({
             type: "add-market",
             data: {
                 id: this.id,
@@ -482,7 +482,7 @@ class MarketExtractor {
             this.contractListObserve = null;
 
             // Send message to service worker with new event
-            App.PORT.postMessage({
+            App.sendMessage({
                 type: "remove-market",
                 data: {
                     id: this.id,
@@ -567,7 +567,7 @@ class EventExtractor {
         this.statusObserver.observe(this.$statusBadge, EventExtractor.STATUS_OBSERVER_CONFIG);
 
         // Send message to service worker with new event
-        App.PORT.postMessage({
+        App.sendMessage({
             type: "add-event",
             data: {
                 id: this.id,
@@ -583,7 +583,7 @@ class EventExtractor {
             this.statusObserver = null;
 
             // Send message to service worker with new event
-            App.PORT.postMessage({
+            App.sendMessage({
                 type: "remove-event",
                 data: {
                     id: this.id,
@@ -600,6 +600,15 @@ class App {
 
     static generateId(slug) {
         return slug.toLowerCase().replace(/ /g, "-");
+    }
+
+    static sendMessage(message) {
+        try {
+            App.PORT.postMessage(message);
+        } catch (error) {
+            alert(error.message + " - please try refreshing the page.");
+            console.error(error);
+        }
     }
 
     constructor() {
