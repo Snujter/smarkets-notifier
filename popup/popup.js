@@ -142,7 +142,7 @@ class App {
                             this.handleUpdateContract(data);
                             break;
                         case "remove-contract":
-                            this.handleRemoveContract(data.id);
+                            this.handleRemoveContract(data);
                             break;
                         case "add-event":
                             this.handleAddEvent(data);
@@ -151,7 +151,7 @@ class App {
                             this.handleUpdateEvent(data);
                             break;
                         case "remove-event":
-                            this.handleRemoveEvent(data.id);
+                            this.handleRemoveEvent(data);
                             break;
                         case "add-market":
                             this.handleAddMarket(data);
@@ -160,7 +160,7 @@ class App {
                             this.handleUpdateMarket(data);
                             break;
                         case "remove-market":
-                            this.handleRemoveMarket(data.id);
+                            this.handleRemoveMarket(data);
                             break;
                         default:
                             // Handle unknown message types, if needed
@@ -173,19 +173,33 @@ class App {
         });
     }
 
+    findMarketElement(id, eventId) {
+        // Otherwise find event
+        const $event = document.getElementById(eventId);
+        if (!$event) {
+            console.warn(`Event with id ${eventId} not found`);
+            return;
+        }
+
+        return $event.shadowRoot.getElementById(id);
+    }
+
+    findContractElement(id, marketId, eventId) {
+        const $market = this.findMarketElement(id, eventId);
+        if (!$market) {
+            console.warn(`Market with id ${marketId} not found`);
+            return;
+        }
+
+        return $market.shadowRoot.getElementById(id);
+    }
+
     handleAddContract(contract) {
         console.log("HANDLING ADDED CONTRACT: ", contract);
         const { eventId, marketId } = contract;
 
-        // Otherwise find event
-        const $event = document.getElementById(eventId);
-        if (!$event) {
-            console.log(`Event with id ${eventId} not found`);
-            return;
-        }
-
         // Find market on event
-        const $market = $event.shadowRoot.getElementById(marketId);
+        const $market = this.findMarketElement(marketId, eventId);
         if (!$market) {
             console.log(`Market with id ${marketId} not found`);
             return;
@@ -198,22 +212,8 @@ class App {
     handleUpdateContract(contract) {
         const { id, marketId, eventId } = contract;
 
-        // Otherwise find event
-        const $event = document.getElementById(eventId);
-        if (!$event) {
-            console.log(`Event with id ${eventId} not found`);
-            return;
-        }
-
-        // Find market on event
-        const $market = $event.shadowRoot.getElementById(marketId);
-        if (!$market) {
-            console.log(`Market with id ${marketId} not found`);
-            return;
-        }
-
         // Find contract on market
-        const $contract = $market.shadowRoot.getElementById(id);
+        const $contract = this.findContractElement(id, marketId, eventId);
         if (!$contract) {
             console.log("No contract found to update.");
             return;
@@ -230,11 +230,59 @@ class App {
         }
     }
 
-    handleRemoveContract(id) {}
-    handleAddEvent(id) {}
-    handleRemoveEvent(id) {}
-    handleAddMarket(id) {}
-    handleRemoveMarket(id) {}
+    handleRemoveContract(contract) {
+        const { id, marketId, eventId } = contract;
+
+        const $contract = this.findContractElement(id, marketId, eventId);
+        if (!$contract) {
+            console.log("No contract found to remove.");
+            return;
+        }
+
+        $contract.remove();
+    }
+
+    handleAddEvent(event) {
+        const $event = document.createElement("event-element");
+        $event.setAttribute("id", event.id);
+        $event.setAttribute("home-team", event.homeTeam);
+        $event.setAttribute("away-team", event.awayTeam);
+        $event.setAttribute("tab-id", event.tabId);
+
+        this.$eventsContainer.insertBefore($event, this.$eventsContainer.firstChild);
+    }
+
+    handleRemoveEvent(event) {
+        const $event = document.getElementById(event.id);
+        if (!$event) {
+            console.warn(`Event with id ${event.id} not found`);
+            return;
+        }
+
+        $event.remove();
+    }
+
+    handleAddMarket(market) {
+        const { eventId } = market;
+
+        const $event = document.getElementById(eventId);
+        if (!$event) {
+            console.warn(`Event with id ${eventId} not found`);
+            return;
+        }
+
+        // Add market element to events
+        $event.addMarket(market);
+    }
+
+    handleRemoveMarket(market) {
+        const { id, eventId } = market;
+        const $market = this.findMarketElement(id, eventId);
+        if (!$market) {
+            console.log(`Market with id ${id} not found`);
+            return;
+        }
+    }
 
     loadTemplates(templatePaths) {
         const fetchPromises = templatePaths.map((templatePath) => {
